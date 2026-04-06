@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Error')}"/>
+</head>
+<body style="background:var(--bg);">
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;">
+    <div class="text-center" style="max-width:480px;">
+        <!-- Icono de error -->
+        <div style="width:120px;height:120px;border-radius:50%;background:rgba(255,87,34,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 2rem;">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size:3.5rem;color:var(--orange);"></i>
+        </div>
+
+        <!-- Mensaje -->
+        <h1 style="font-size:2.2rem;font-weight:800;margin-bottom:.5rem;color:var(--text);">
+            Algo salió mal
+        </h1>
+        <p style="color:var(--text-muted);font-size:1rem;margin-bottom:2rem;line-height:1.6;">
+            La página que buscas no existe o ha ocurrido un error inesperado.
+            <br>Si el problema persiste, contacta con soporte.
+        </p>
+
+        <!-- Detalles del error (solo si están disponibles) -->
+        <div th:if="${error}" style="background:#fff;border:1.5px solid var(--border);border-radius:.75rem;padding:1.25rem;margin-bottom:2rem;text-align:left;">
+            <div style="font-weight:700;color:var(--text);margin-bottom:.5rem;font-size:.9rem;">
+                <i class="bi bi-info-circle me-2" style="color:var(--orange);"></i>Detalles técnicos
+            </div>
+            <div style="font-size:.85rem;color:var(--text-muted);">
+                <strong>Estado:</strong> <span th:text="${status}">—</span><br/>
+                <strong>Error:</strong> <span th:text="${error}">—</span><br/>
+                <strong>Ruta:</strong> <span th:text="${path}">—</span>
+            </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+            <a href="javascript:history.back()" class="btn-outline-orange" style="padding:.6rem 1.5rem;">
+                <i class="bi bi-arrow-left me-1"></i> Volver atrás
+            </a>
+            <a href="/" class="btn-orange" style="padding:.6rem 1.5rem;">
+                <i class="bi bi-house-door me-1"></i> Ir al inicio
+            </a>
+        </div>
+
+        <!-- Footer info -->
+        <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);">
+            <p style="font-size:.82rem;color:var(--text-muted);margin:0;">
+                <i class="bi bi-activity me-1" style="color:var(--orange);"></i>
+                TFGFitApp © 2026
+            </p>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+

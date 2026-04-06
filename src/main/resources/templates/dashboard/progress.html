@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Mi Progreso')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4>Mi Progreso</h4>
+            <p>Registra y consulta tu evolución física</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a id="btn-export" href="#" class="btn-outline-orange btn-sm" onclick="exportCsv(event)">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+            </a>
+            <button class="btn-orange" onclick="openNewRecord()">
+                <i class="bi bi-plus-lg"></i> Nuevo registro
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS LTIMAS MEDIDAS -->
+    <div class="row g-3 mb-4 fade-in-up" id="last-stats">
+        <div class="col-12 text-center py-3"><div class="spinner-border text-secondary spinner-border-sm"></div></div>
+    </div>
+
+    <!-- GRÁFICO (NUEVO TOQUE GRÁFICO) -->
+    <div class="card mb-4 fade-in-up" id="chart-container" style="display:none;">
+        <div class="card-body-p">
+            <h5 class="mb-3" style="font-size: 1rem; font-weight: 600;"><i class="bi bi-activity text-orange me-2"></i>Evolución de Peso</h5>
+            <div style="position: relative; height: 250px; width: 100%;">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="card fade-in-up delay-1">
+        <div class="card-header-custom">
+            <h5><i class="bi bi-graph-up-arrow me-2" style="color:var(--orange)"></i>Historial de registros</h5>
+            <span class="text-muted" style="font-size:.85rem;" id="total-label"></span>
+        </div>
+        <div class="table-overflow">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Peso</th>
+                        <th>% Grasa</th>
+                        <th>Pecho</th>
+                        <th>Cintura</th>
+                        <th>Cadera</th>
+                        <th>Brazos</th>
+                        <th>Piernas</th>
+                        <th>Notas</th>
+                        <th style="width:60px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="progress-body">
+                    <tr><td colspan="10"><div class="text-center py-4"><div class="spinner-border text-secondary spinner-border-sm"></div></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL nuevo registro -->
+<div class="modal fade" id="recordModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-clipboard2-pulse-fill me-2" style="color:var(--orange)"></i>Nuevo registro de progreso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="record-alert"></div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha *</label>
+                        <input type="date" id="rec-date" class="form-control"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Peso (kg)</label>
+                        <input type="number" id="rec-weight" class="form-control" placeholder="70.5" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">% Grasa corporal</label>
+                        <input type="number" id="rec-fat" class="form-control" placeholder="18.5" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Pecho (cm)</label>
+                        <input type="number" id="rec-chest" class="form-control" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cintura (cm)</label>
+                        <input type="number" id="rec-waist" class="form-control" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cadera (cm)</label>
+                        <input type="number" id="rec-hips" class="form-control" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Brazos (cm)</label>
+                        <input type="number" id="rec-arms" class="form-control" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Piernas (cm)</label>
+                        <input type="number" id="rec-legs" class="form-control" step="0.1"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <textarea id="rec-notes" class="form-control" rows="2" placeholder="Observaciones del día..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn-orange btn-sm" onclick="saveRecord()">
+                    <i class="bi bi-check-lg"></i> Guardar registro
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+let recordModalBs;
+let records = [];
+let weightChartInstance = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    recordModalBs = new bootstrap.Modal(document.getElementById('recordModal'));
+    loadProgress();
+});
+
+async function loadProgress() {
+    try {
+        const res = await apiFetch('/progress/me');
+        records = await res.json();
+        renderLastStats(records);
+        renderChart(records);
+        renderTable(records);
+        document.getElementById('total-label').textContent = `${records.length} registro${records.length !== 1 ? 's' : ''}`;
+    } catch(e) {
+        document.getElementById('progress-body').innerHTML =
+            `<tr><td colspan="10"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar</p></div></td></tr>`;
+    }
+}
+
+function renderLastStats(recs) {
+    const row = document.getElementById('last-stats');
+    if (recs.length === 0) {
+        row.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-graph-up"></i><p>Aún no tienes registros de progreso.<br>¡Empieza hoy!</p></div></div>`;
+        return;
+    }
+    const last = recs[0];
+    const prev = recs[1];
+    const diff = (cur, pre) => {
+        if (!cur || !pre) return '';
+        const d = (parseFloat(cur) - parseFloat(pre)).toFixed(1);
+        const cls = d > 0 ? 'text-danger' : 'text-success';
+        const icon = d > 0 ? 'bi-arrow-up' : 'bi-arrow-down';
+        return `<small class="${cls} d-block"><i class="bi ${icon}"></i> ${Math.abs(d)}</small>`;
+    };
+    row.innerHTML = `
+        ${miniStat('bi-speedometer2','orange', last.weight ? last.weight+' kg':'—', 'Peso', diff(last.weight, prev?.weight))}
+        ${miniStat('bi-percent','blue', last.bodyFat ? last.bodyFat+'%':'—', 'Grasa corporal', diff(last.bodyFat, prev?.bodyFat))}
+        ${miniStat('bi-rulers','green', last.waist ? last.waist+' cm':'—', 'Cintura', diff(last.waist, prev?.waist))}
+        ${miniStat('bi-calendar-check','purple', formatDate(last.recordDate), 'Último registro', '')}
+    `;
+}
+
+function renderChart(recs) {
+    const container = document.getElementById('chart-container');
+    if (recs.length < 2) {
+        container.style.display = 'none';
+        return;
+    }
+    container.style.display = 'block';
+
+    const validRecs = recs.filter(r => r.weight).reverse(); // Invertir para orden cronológico
+
+    const labels = validRecs.map(r => formatDate(r.recordDate));
+    const dataWeights = validRecs.map(r => r.weight);
+
+    const ctx = document.getElementById('weightChart').getContext('2d');
+
+    if (weightChartInstance) {
+        weightChartInstance.destroy();
+    }
+
+    weightChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Peso (kg)',
+                data: dataWeights,
+                borderColor: '#FF7A00',
+                backgroundColor: 'rgba(255, 122, 0, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#FF7A00',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: false, suggestedMin: Math.min(...dataWeights) - 2 }
+            }
+        }
+    });
+}
+
+function miniStat(icon, color, val, label, diffHtml) {
+    return `
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon ${color}"><i class="bi ${icon}"></i></div>
+            <div class="stat-body">
+                <div class="value">${val}</div>
+                <div class="label">${label}</div>
+                ${diffHtml}
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderTable(recs) {
+    const body = document.getElementById('progress-body');
+    if (recs.length === 0) {
+        body.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="bi bi-clipboard2-pulse"></i><p>Sin registros</p></div></td></tr>`;
+        return;
+    }
+    body.innerHTML = recs.map((r, i) => {
+        const prev = recs[i + 1];
+        const wDiff = prev && r.weight && prev.weight
+            ? ((parseFloat(r.weight) - parseFloat(prev.weight)) > 0
+                ? `<span style="color:#ef4444;font-size:.75rem;"> ▲${(parseFloat(r.weight)-parseFloat(prev.weight)).toFixed(1)}</span>`
+                : `<span style="color:#10b981;font-size:.75rem;"> ▼${Math.abs(parseFloat(r.weight)-parseFloat(prev.weight)).toFixed(1)}</span>`)
+            : '';
+        return `
+        <tr>
+            <td><strong>${formatDate(r.recordDate)}</strong></td>
+            <td>${r.weight ? r.weight+' kg' : '—'}${wDiff}</td>
+            <td>${r.bodyFat ? r.bodyFat+'%' : '—'}</td>
+            <td>${r.chest ? r.chest+' cm' : '—'}</td>
+            <td>${r.waist ? r.waist+' cm' : '—'}</td>
+            <td>${r.hips ? r.hips+' cm' : '—'}</td>
+            <td>${r.arms ? r.arms+' cm' : '—'}</td>
+            <td>${r.legs ? r.legs+' cm' : '—'}</td>
+            <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.notes||''}">${r.notes||'—'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteRecord(${r.id})" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function openNewRecord() {
+    document.getElementById('rec-date').value   = new Date().toISOString().split('T')[0];
+    document.getElementById('rec-weight').value = '';
+    document.getElementById('rec-fat').value    = '';
+    document.getElementById('rec-chest').value  = '';
+    document.getElementById('rec-waist').value  = '';
+    document.getElementById('rec-hips').value   = '';
+    document.getElementById('rec-arms').value   = '';
+    document.getElementById('rec-legs').value   = '';
+    document.getElementById('rec-notes').value  = '';
+    document.getElementById('record-alert').innerHTML = '';
+    recordModalBs.show();
+}
+
+async function saveRecord() {
+    const body = {
+        recordDate: document.getElementById('rec-date').value,
+        weight:     parseFloat(document.getElementById('rec-weight').value) || null,
+        bodyFat:    parseFloat(document.getElementById('rec-fat').value)    || null,
+        chest:      parseFloat(document.getElementById('rec-chest').value)  || null,
+        waist:      parseFloat(document.getElementById('rec-waist').value)  || null,
+        hips:       parseFloat(document.getElementById('rec-hips').value)   || null,
+        arms:       parseFloat(document.getElementById('rec-arms').value)   || null,
+        legs:       parseFloat(document.getElementById('rec-legs').value)   || null,
+        notes:      document.getElementById('rec-notes').value || null
+    };
+    if (!body.recordDate) {
+        showAlert(document.getElementById('record-alert'), 'La fecha es obligatoria');
+        return;
+    }
+    try {
+        const res = await apiFetch('/progress', { method:'POST', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error();
+        recordModalBs.hide();
+        loadProgress();
+    } catch(e) {
+        showAlert(document.getElementById('record-alert'), 'Error al guardar el registro');
+    }
+}
+
+async function deleteRecord(id) {
+    if (!confirm('¿Eliminar este registro de progreso?')) return;
+    await apiFetch(`/progress/${id}`, { method:'DELETE' });
+    loadProgress();
+}
+
+async function exportCsv(e) {
+    e.preventDefault();
+    try {
+        const token = getToken();
+        const resp = await fetch('/api/progress/me/export', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const blob = await resp.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'mi_progreso.csv'; a.click();
+        URL.revokeObjectURL(url);
+    } catch(e) { alert('Error al exportar'); }
+}
+</script>
+</body>
+</html>
+
+

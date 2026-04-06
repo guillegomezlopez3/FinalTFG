@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Inicio')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4 id="welcome-title">Bienvenido</h4>
+            <p id="welcome-sub">Aquí tienes un resumen de tu actividad</p>
+        </div>
+        <div class="text-muted" style="font-size:.85rem;" id="topbar-date"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4" id="stats-row"></div>
+
+    <!-- ACCESOS RÁPIDOS -->
+    <div class="row g-3" id="quick-access"></div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+
+const user = getUser();
+const today = new Date().toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+document.getElementById('topbar-date').textContent = today.charAt(0).toUpperCase() + today.slice(1);
+
+if (user) {
+    document.getElementById('welcome-title').textContent = `Hola, ${user.name.split(' ')[0]} 👋`;
+    document.getElementById('welcome-sub').textContent =
+        user.role === 'TRAINER' ? 'Panel de tu entrenamiento — gestiona tus clientes y planes' :
+        user.role === 'ADMIN'   ? 'Panel de administración del sistema' :
+                                  'Tu panel personal — consulta tu plan y progreso';
+    renderDashboard(user.role);
+}
+
+async function renderDashboard(role) {
+    const statsRow   = document.getElementById('stats-row');
+    const quickAccess = document.getElementById('quick-access');
+
+    if (role === 'ADMIN') {
+        /* Stats del admin */
+        try {
+            const res  = await apiFetch('/admin/stats');
+            const data = await res.json();
+            statsRow.innerHTML = `
+                ${statCard('bi-people-fill','orange', data.totalUsers, 'Usuarios totales')}
+                ${statCard('bi-person-workspace','blue', data.totalTrainers, 'Entrenadores')}
+                ${statCard('bi-person-heart','green', data.totalClients, 'Clientes')}
+                ${statCard('bi-egg-fried','purple', data.totalDiets, 'Dietas creadas')}
+                ${statCard('bi-lightning-charge-fill','teal', data.totalWorkoutPlans, 'Planes de entrenamiento')}
+                ${statCard('bi-graph-up-arrow','red', data.totalProgressRecords, 'Registros de progreso')}
+            `;
+        } catch(e) { statsRow.innerHTML = errorMsg(); }
+
+        quickAccess.innerHTML = `
+            ${quickCard('/dashboard/admin','bi-shield-fill-check','orange','Panel Admin','Estadísticas, entrenadores y clientes')}
+            ${quickCard('/dashboard/clients','bi-people-fill','blue','Clientes','Listado completo de clientes')}
+        `;
+
+    } else if (role === 'TRAINER') {
+        /* Stats del trainer */
+        try {
+            const [clientsRes, dietsRes, plansRes] = await Promise.all([
+                apiFetch('/clients?size=1'),
+                apiFetch('/diets/client/0?size=1').catch(() => null),
+                apiFetch('/workout-plans/client/0?size=1').catch(() => null)
+            ]);
+            const clientsData = await clientsRes.json();
+            statsRow.innerHTML = `
+                ${statCard('bi-people-fill','orange', clientsData.totalElements, 'Mis clientes')}
+                ${statCard('bi-person-check-fill','green', '—', 'Activos hoy')}
+                ${statCard('bi-egg-fried','purple', '—', 'Dietas activas')}
+                ${statCard('bi-lightning-charge-fill','blue', '—', 'Planes activos')}
+            `;
+        } catch(e) {
+            statsRow.innerHTML = `
+                ${statCard('bi-people-fill','orange','—','Mis clientes')}
+                ${statCard('bi-egg-fried','purple','—','Dietas')}
+                ${statCard('bi-lightning-charge-fill','blue','—','Planes')}
+            `;
+        }
+        quickAccess.innerHTML = `
+            ${quickCard('/dashboard/clients','bi-people-fill','orange','Mis Clientes','Gestiona tu lista de clientes')}
+            ${quickCard('/dashboard/diets','bi-egg-fried','purple','Dietas','Crea y edita planes de nutrición')}
+            ${quickCard('/dashboard/workouts','bi-lightning-charge-fill','blue','Entrenamientos','Diseña rutinas de entrenamiento')}
+            ${quickCard('/dashboard/profile','bi-person-fill','teal','Mi Perfil','Actualiza tu especialidad y datos')}
+        `;
+
+    } else { /* CLIENT */
+        try {
+            const profileRes   = await apiFetch('/me');
+            const profileData  = await profileRes.json();
+            /* Actualizar clientId en caché por si no estaba */
+            if (profileData.clientId) saveUser({ ...getUser(), clientId: profileData.clientId });
+
+            const progressRes  = await apiFetch('/progress/me');
+            const progressData = await progressRes.json();
+            const last = progressData.length > 0 ? progressData[0] : null;
+
+            /* Stats reales del cliente */
+            const cid = profileData.clientId;
+            let numDiets = '—', numPlans = '—';
+            if (cid) {
+                try {
+                    const [dRes, pRes] = await Promise.all([
+                        apiFetch(`/diets/client/${cid}?size=1`),
+                        apiFetch(`/workout-plans/client/${cid}?size=1`)
+                    ]);
+                    const dData = await dRes.json();
+                    const pData = await pRes.json();
+                    numDiets = dData.totalElements ?? '—';
+                    numPlans = pData.totalElements ?? '—';
+                } catch(_) {}
+            }
+
+            statsRow.innerHTML = `
+                ${statCard('bi-graph-up-arrow','orange', progressData.length, 'Registros de progreso')}
+                ${statCard('bi-speedometer2','blue', last ? (last.weight + ' kg') : '—', 'Último peso registrado')}
+                ${statCard('bi-egg-fried','purple', numDiets, 'Dietas asignadas')}
+                ${statCard('bi-lightning-charge-fill','teal', numPlans, 'Planes de entrenamiento')}
+            `;
+        } catch(e) {
+            statsRow.innerHTML = `
+                ${statCard('bi-graph-up-arrow','orange','—','Registros de progreso')}
+                ${statCard('bi-speedometer2','blue','—','Último peso')}
+                ${statCard('bi-egg-fried','purple','—','Dietas')}
+                ${statCard('bi-lightning-charge-fill','teal','—','Planes')}
+            `;
+        }
+        quickAccess.innerHTML = `
+            ${quickCard('/dashboard/progress','bi-graph-up-arrow','orange','Mi Progreso','Registra y consulta tu evolución')}
+            ${quickCard('/dashboard/diets','bi-egg-fried','purple','Mi Dieta','Consulta tu plan de nutrición')}
+            ${quickCard('/dashboard/workouts','bi-lightning-charge-fill','blue','Mi Entrenamiento','Consulta tu rutina semanal')}
+            ${quickCard('/dashboard/profile','bi-person-fill','teal','Mi Perfil','Actualiza tus datos personales')}
+        `;
+    }
+}
+
+function statCard(icon, color, value, label) {
+    return `
+    <div class="col-sm-6 col-xl-4 fade-in-up">
+        <div class="stat-card">
+            <div class="stat-icon ${color}"><i class="bi ${icon}"></i></div>
+            <div class="stat-body">
+                <div class="value">${value}</div>
+                <div class="label">${label}</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function quickCard(href, icon, color, title, desc) {
+    return `
+    <div class="col-sm-6 col-xl-3 fade-in-up">
+        <a href="${href}" class="text-decoration-none">
+            <div class="card p-4 h-100" style="transition:all .2s;cursor:pointer;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='var(--shadow-hover)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                <div class="stat-icon ${color} mb-3" style="width:46px;height:46px;"><i class="bi ${icon}"></i></div>
+                <h6 class="fw-700 mb-1" style="font-weight:700;">${title}</h6>
+                <p class="text-muted mb-0" style="font-size:.83rem;">${desc}</p>
+            </div>
+        </a>
+    </div>`;
+}
+
+function errorMsg() {
+    return `<div class="col-12"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>No se pudieron cargar las estadísticas</p></div></div>`;
+}
+</script>
+</body>
+</html>
+

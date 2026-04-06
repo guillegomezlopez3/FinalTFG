@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Administración')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4>Panel de Administración</h4>
+            <p>Estadísticas globales y gestión de usuarios</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-3 mb-4 fade-in-up" id="stats-row">
+        <div class="col-12 text-center py-3"><div class="spinner-border text-secondary"></div></div>
+    </div>
+
+    <div class="row g-3">
+        <!-- ENTRENADORES -->
+        <div class="col-lg-6 fade-in-up delay-1">
+            <div class="card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-person-workspace me-2" style="color:#3b82f6"></i>Entrenadores</h5>
+                    <span class="text-muted" style="font-size:.82rem;" id="trainers-count"></span>
+                </div>
+                <div class="table-overflow">
+                    <table class="table">
+                        <thead><tr><th>Nombre</th><th>Email</th><th>Especialidad</th><th>Clientes</th><th>Estado / Acción</th></tr></thead>
+                        <tbody id="trainers-body">
+                            <tr><td colspan="5"><div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLIENTES -->
+        <div class="col-lg-6 fade-in-up delay-2">
+            <div class="card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-people-fill me-2" style="color:#10b981"></i>Clientes recientes</h5>
+                    <span class="text-muted" style="font-size:.82rem;" id="clients-count"></span>
+                </div>
+                <div class="table-overflow">
+                    <table class="table">
+                        <thead><tr><th>Nombre</th><th>Entrenador</th><th>Nivel</th><th>Estado</th><th>Acción</th></tr></thead>
+                        <tbody id="clients-body">
+                            <tr><td colspan="5"><div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadTrainers();
+    loadClients();
+});
+
+async function loadStats() {
+    try {
+        const res  = await apiFetch('/admin/stats');
+        const data = await res.json();
+        document.getElementById('stats-row').innerHTML = `
+            ${stat('bi-people-fill','orange', data.totalUsers, 'Usuarios totales')}
+            ${stat('bi-person-workspace','blue', data.totalTrainers, 'Entrenadores')}
+            ${stat('bi-people','green', data.totalClients, 'Clientes')}
+            ${stat('bi-person-check-fill','teal', data.activeClients, 'Clientes activos')}
+            ${stat('bi-egg-fried','purple', data.totalDiets, 'Dietas')}
+            ${stat('bi-lightning-charge-fill','red', data.totalWorkoutPlans, 'Planes')}
+        `;
+    } catch(e) {
+        document.getElementById('stats-row').innerHTML =
+            `<div class="col-12 text-center text-muted py-2">Error al cargar estadísticas</div>`;
+    }
+}
+
+function stat(icon, color, value, label) {
+    return `
+    <div class="col-sm-6 col-xl-4">
+        <div class="stat-card">
+            <div class="stat-icon ${color}"><i class="bi ${icon}"></i></div>
+            <div class="stat-body"><div class="value">${value}</div><div class="label">${label}</div></div>
+        </div>
+    </div>`;
+}
+
+async function loadTrainers() {
+    try {
+        const res  = await apiFetch('/admin/trainers?size=20&sort=createdAt,desc');
+        const data = await res.json();
+        document.getElementById('trainers-count').textContent = `${data.totalElements} entrenadores`;
+        const body = document.getElementById('trainers-body');
+        if (!data.content || data.content.length === 0) {
+            body.innerHTML = `<tr><td colspan="5"><div class="empty-state" style="padding:1.5rem;"><i class="bi bi-person-workspace"></i><p>Sin entrenadores</p></div></td></tr>`;
+            return;
+        }
+        body.innerHTML = data.content.map(t => `
+        <tr>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.72rem;flex-shrink:0;">
+                        ${(t.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+                    </div>
+                    <span style="font-weight:600;font-size:.88rem;">${t.name||'—'}</span>
+                </div>
+            </td>
+            <td style="font-size:.82rem;">${t.email||'—'}</td>
+            <td style="font-size:.82rem;">${t.specialty || '<span class="text-muted">—</span>'}</td>
+            <td><span class="badge badge-trainer">${t.clientCount}</span></td>
+            <td>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    ${t.active ? '<span class="badge badge-active">Activo</span>' : '<span class="badge badge-inactive">Inactivo</span>'}
+                    <button
+                        class="btn btn-xs ${t.active ? 'btn-outline-danger' : 'btn-outline-success'}"
+                        style="font-size:.74rem;padding:.2rem .5rem;"
+                        onclick="toggleActive(${t.userId}, this, ${t.active ? 'true' : 'false'})">
+                        <i class="bi ${t.active ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
+                        ${t.active ? 'Desactivar' : 'Activar'}
+                    </button>
+                </div>
+            </td>
+        </tr>`).join('');
+    } catch(e) {
+        document.getElementById('trainers-body').innerHTML =
+            `<tr><td colspan="5" class="text-center text-muted py-2">Error al cargar</td></tr>`;
+    }
+}
+
+async function loadClients() {
+    try {
+        const res  = await apiFetch('/admin/clients?size=20&sort=createdAt,desc');
+        const data = await res.json();
+        document.getElementById('clients-count').textContent = `${data.totalElements} clientes`;
+        const body = document.getElementById('clients-body');
+        if (!data.content || data.content.length === 0) {
+            body.innerHTML = `<tr><td colspan="5"><div class="empty-state" style="padding:1.5rem;"><i class="bi bi-people"></i><p>Sin clientes</p></div></td></tr>`;
+            return;
+        }
+        const levelMap = { BEGINNER:'Principiante', INTERMEDIATE:'Intermedio', ADVANCED:'Avanzado' };
+        const levelCls = { BEGINNER:'badge-beginner', INTERMEDIATE:'badge-intermediate', ADVANCED:'badge-advanced' };
+        body.innerHTML = data.content.map(c => `
+        <tr>
+            <td>
+                <div>
+                    <div style="font-weight:600;font-size:.88rem;">${c.userName||'—'}</div>
+                    <div style="font-size:.76rem;color:var(--text-muted);">${c.userEmail||''}</div>
+                </div>
+            </td>
+            <td style="font-size:.82rem;">${c.trainerName||'<span class="text-muted">Sin asignar</span>'}</td>
+            <td>${c.level ? `<span class="badge ${levelCls[c.level]||''}">${levelMap[c.level]||c.level}</span>` : '<span class="text-muted">—</span>'}</td>
+            <td>${c.active ? '<span class="badge badge-active">Activo</span>' : '<span class="badge badge-inactive">Inactivo</span>'}</td>
+            <td>
+                <button
+                    class="btn btn-xs ${c.active ? 'btn-outline-danger' : 'btn-outline-success'}"
+                    style="font-size:.74rem;padding:.2rem .5rem;"
+                    onclick="toggleActive(${c.userId}, this, ${c.active ? 'true' : 'false'})">
+                    <i class="bi ${c.active ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
+                    ${c.active ? 'Desactivar' : 'Activar'}
+                </button>
+            </td>
+        </tr>`).join('');
+    } catch(e) {
+        document.getElementById('clients-body').innerHTML =
+            `<tr><td colspan="5" class="text-center text-muted py-2">Error al cargar</td></tr>`;
+    }
+}
+
+async function toggleActive(userId, btn, currentState) {
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    try {
+        const res = await apiFetch(`/admin/users/${userId}/active`, { method:'PUT' });
+        if (!res.ok) throw new Error();
+        setTimeout(() => {
+            loadTrainers();
+            loadClients();
+        }, 300);
+    } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+        const actionText = currentState ? 'desactivar' : 'activar';
+        alert(`No se pudo ${actionText} el usuario.`);
+    }
+}
+</script>
+</body>
+</html>
+
+

@@ -1,0 +1,14 @@
+package com.tfgfitapp.tfgfitapp.repository;
+
+import com.tfgfitapp.tfgfitapp.entity.DietMeal;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface DietMealRepository extends JpaRepository<DietMeal, Long> {
+
+    List<DietMeal> findAllByDietId(Long dietId);
+}
+

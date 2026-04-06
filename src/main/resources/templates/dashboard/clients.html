@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Clientes')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4>Clientes</h4>
+            <p>Gestiona tu lista de clientes asignados</p>
+        </div>
+        <button class="btn-orange" id="btn-new-client" onclick="openNewClient()" style="display:none;">
+            <i class="bi bi-plus-lg"></i> Nuevo cliente
+        </button>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card mb-3 fade-in-up">
+        <div class="card-body-p py-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-sm-4 col-md-3">
+                    <label class="form-label mb-1">Nivel</label>
+                    <select id="filter-level" class="form-select form-select-sm">
+                        <option value="">Todos los niveles</option>
+                        <option value="BEGINNER">Principiante</option>
+                        <option value="INTERMEDIATE">Intermedio</option>
+                        <option value="ADVANCED">Avanzado</option>
+                    </select>
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <label class="form-label mb-1">Estado</label>
+                    <select id="filter-active" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card fade-in-up delay-1">
+        <div class="card-header-custom">
+            <h5><i class="bi bi-people-fill me-2" style="color:var(--orange)"></i>Lista de clientes</h5>
+            <span class="text-muted" style="font-size:.85rem;" id="total-label"></span>
+        </div>
+        <div class="table-overflow">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Nivel</th>
+                        <th>Objetivo</th>
+                        <th>Peso</th>
+                        <th>Estado</th>
+                        <th>Registrado</th>
+                        <th style="width:120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="clients-body">
+                    <tr><td colspan="7"><div class="text-center py-4"><div class="spinner-border text-secondary spinner-border-sm"></div></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- Paginación -->
+        <div class="d-flex align-items-center justify-content-between px-3 py-2 border-top" id="pagination-bar" style="display:none!important;">
+            <span class="text-muted" style="font-size:.82rem;" id="page-info"></span>
+            <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL: editar cliente -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-fill me-2" style="color:var(--orange)"></i>Editar cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="edit-alert"></div>
+                <input type="hidden" id="edit-id"/>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Edad</label>
+                        <input type="number" id="edit-age" class="form-control" placeholder="25"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Género</label>
+                        <select id="edit-gender" class="form-select">
+                            <option value="">— Sin especificar —</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="O">Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nivel</label>
+                        <select id="edit-level" class="form-select">
+                            <option value="">— Sin especificar —</option>
+                            <option value="BEGINNER">Principiante</option>
+                            <option value="INTERMEDIATE">Intermedio</option>
+                            <option value="ADVANCED">Avanzado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Altura (cm)</label>
+                        <input type="number" id="edit-height" class="form-control" placeholder="175" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Peso (kg)</label>
+                        <input type="number" id="edit-weight" class="form-control" placeholder="70.0" step="0.1"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Estado</label>
+                        <select id="edit-active" class="form-select">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Objetivo</label>
+                        <input type="text" id="edit-goal" class="form-control" placeholder="Pérdida de grasa, hipertrofia..."/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Lesiones</label>
+                        <input type="text" id="edit-injuries" class="form-control" placeholder="Rodilla derecha, espalda..."/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Alergias</label>
+                        <input type="text" id="edit-allergies" class="form-control" placeholder="Gluten, lactosa..."/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <textarea id="edit-notes" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn-orange btn-sm" onclick="saveClient()">
+                    <i class="bi bi-check-lg"></i> Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: nuevo cliente -->
+<div class="modal fade" id="newClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2" style="color:var(--orange)"></i>Nuevo cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="new-client-alert"></div>
+                <form id="new-client-form">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre completo *</label>
+                            <input type="text" id="new-name" class="form-control" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email *</label>
+                            <input type="email" id="new-email" class="form-control" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" id="new-password" class="form-control" minlength="6" required/>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nivel</label>
+                            <select id="new-level" class="form-select">
+                                <option value="BEGINNER">Principiante</option>
+                                <option value="INTERMEDIATE">Intermedio</option>
+                                <option value="ADVANCED">Avanzado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Edad</label>
+                            <input type="number" id="new-age" class="form-control" placeholder="25"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Altura (cm)</label>
+                            <input type="number" id="new-height" class="form-control" placeholder="175" step="0.1"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Peso (kg)</label>
+                            <input type="number" id="new-weight" class="form-control" placeholder="70.0" step="0.1"/>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn-orange btn-sm" onclick="createClient()">
+                    <i class="bi bi-check-lg"></i> Crear cliente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+
+let currentPage = 0;
+const pageSize  = 10;
+let editModal, newClientModal;
+const user = getUser();
+
+document.addEventListener('DOMContentLoaded', () => {
+    editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    newClientModal = new bootstrap.Modal(document.getElementById('newClientModal'));
+
+    if (user && user.role === 'TRAINER') {
+        document.getElementById('btn-new-client').style.display = 'block';
+    }
+
+    loadClients();
+    document.getElementById('filter-level').addEventListener('change', () => { currentPage = 0; loadClients(); });
+    document.getElementById('filter-active').addEventListener('change', () => { currentPage = 0; loadClients(); });
+});
+
+function resetFilters() {
+    document.getElementById('filter-level').value  = '';
+    document.getElementById('filter-active').value = '';
+    currentPage = 0;
+    loadClients();
+}
+
+async function loadClients() {
+    const level  = document.getElementById('filter-level').value;
+    const active = document.getElementById('filter-active').value;
+    let url = `/clients?page=${currentPage}&size=${pageSize}&sort=createdAt,desc`;
+    if (level)  url += `&level=${level}`;
+
+    const body = document.getElementById('clients-body');
+    body.innerHTML = `<tr><td colspan="7"><div class="text-center py-4"><div class="spinner-border text-secondary spinner-border-sm"></div></div></td></tr>`;
+
+    try {
+        const res  = await apiFetch(url);
+        const data = await res.json();
+        let items = data.content || [];
+
+        /* Filtro de activo en cliente (la API no lo filtra directamente en /clients) */
+        if (active !== '') {
+            items = items.filter(c => String(c.active) === active);
+        }
+
+        document.getElementById('total-label').textContent = `${data.totalElements} cliente${data.totalElements !== 1 ? 's' : ''}`;
+
+        if (items.length === 0) {
+            body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-people"></i><p>No hay clientes con estos filtros</p></div></td></tr>`;
+            document.getElementById('pagination-bar').style.display = 'none';
+            return;
+        }
+
+        body.innerHTML = items.map(c => `
+        <tr>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0;">
+                        ${(c.userName || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="font-weight:600;font-size:.9rem;">${c.userName || '—'}</div>
+                        <div style="font-size:.78rem;color:var(--text-muted);">${c.userEmail || ''}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${levelBadge(c.level)}</td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.goal||''}">${c.goal || '—'}</td>
+            <td>${c.weight ? c.weight + ' kg' : '—'}</td>
+            <td>${c.active ? '<span class="badge badge-active">Activo</span>' : '<span class="badge badge-inactive">Inactivo</span>'}</td>
+            <td>${formatDate(c.createdAt)}</td>
+            <td>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-primary" onclick="openEdit(${JSON.stringify(c).replace(/"/g,'&quot;')})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    ${user.role === 'TRAINER' || user.role === 'ADMIN' ?
+                    `<button class="btn btn-sm btn-outline-danger" onclick="deleteClient(${c.id})" title="Desactivar">
+                        <i class="bi bi-trash"></i>
+                    </button>` : ''}
+                </div>
+            </td>
+        </tr>`).join('');
+
+        renderPagination(data);
+        document.getElementById('pagination-bar').style.display = 'flex';
+    } catch(e) {
+        body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar clientes</p></div></td></tr>`;
+    }
+}
+
+function levelBadge(level) {
+    if (!level) return '<span class="text-muted">—</span>';
+    const map = { BEGINNER:'Principiante', INTERMEDIATE:'Intermedio', ADVANCED:'Avanzado' };
+    const cls = { BEGINNER:'badge-beginner', INTERMEDIATE:'badge-intermediate', ADVANCED:'badge-advanced' };
+    return `<span class="badge ${cls[level]||''}">${map[level]||level}</span>`;
+}
+
+function renderPagination(data) {
+    document.getElementById('page-info').textContent =
+        `Página ${data.page + 1} de ${data.totalPages} (${data.totalElements} registros)`;
+    const ul = document.getElementById('pagination');
+    ul.innerHTML = '';
+    const add = (label, page, disabled, active) => {
+        ul.innerHTML += `<li class="page-item ${disabled?'disabled':''} ${active?'active':''}">
+            <a class="page-link" href="#" onclick="event.preventDefault();${!disabled?`goPage(${page})`:''}"> ${label}</a></li>`;
+    };
+    add('‹', currentPage - 1, currentPage === 0, false);
+    for (let i = Math.max(0, currentPage-2); i <= Math.min(data.totalPages-1, currentPage+2); i++) {
+        add(i+1, i, false, i === currentPage);
+    }
+    add('›', currentPage + 1, data.last, false);
+}
+
+function goPage(p) { currentPage = p; loadClients(); }
+
+function openEdit(c) {
+    document.getElementById('edit-id').value        = c.id;
+    document.getElementById('edit-age').value       = c.age || '';
+    document.getElementById('edit-gender').value    = c.gender || '';
+    document.getElementById('edit-height').value    = c.height || '';
+    document.getElementById('edit-weight').value    = c.weight || '';
+    document.getElementById('edit-goal').value      = c.goal || '';
+    document.getElementById('edit-level').value     = c.level || '';
+    document.getElementById('edit-injuries').value  = c.injuries || '';
+    document.getElementById('edit-allergies').value = c.allergies || '';
+    document.getElementById('edit-notes').value     = c.notes || '';
+    document.getElementById('edit-active').value    = String(c.active);
+    document.getElementById('edit-alert').innerHTML = '';
+    editModal.show();
+}
+
+async function saveClient() {
+    const id = document.getElementById('edit-id').value;
+    const body = {
+        age:       parseInt(document.getElementById('edit-age').value) || null,
+        gender:    document.getElementById('edit-gender').value || null,
+        height:    parseFloat(document.getElementById('edit-height').value) || null,
+        weight:    parseFloat(document.getElementById('edit-weight').value) || null,
+        goal:      document.getElementById('edit-goal').value || null,
+        level:     document.getElementById('edit-level').value || null,
+        injuries:  document.getElementById('edit-injuries').value || null,
+        allergies: document.getElementById('edit-allergies').value || null,
+        notes:     document.getElementById('edit-notes').value || null,
+        active:    document.getElementById('edit-active').value === 'true'
+    };
+    try {
+        const res = await apiFetch(`/clients/${id}`, { method:'PUT', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Error al guardar');
+        editModal.hide();
+        loadClients();
+    } catch(e) {
+        showAlert(document.getElementById('edit-alert'), 'Error al guardar los cambios');
+    }
+}
+
+function openNewClient() {
+    document.getElementById('new-client-form').reset();
+    document.getElementById('new-client-alert').innerHTML = '';
+    newClientModal.show();
+}
+
+async function createClient() {
+    const form = document.getElementById('new-client-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const body = {
+        name:     document.getElementById('new-name').value,
+        email:    document.getElementById('new-email').value,
+        password: document.getElementById('new-password').value,
+        level:    document.getElementById('new-level').value,
+        age:      document.getElementById('new-age').value ? parseInt(document.getElementById('new-age').value) : null,
+        height:   document.getElementById('new-height').value ? parseFloat(document.getElementById('new-height').value) : null,
+        weight:   document.getElementById('new-weight').value ? parseFloat(document.getElementById('new-weight').value) : null
+    };
+
+    try {
+        const res = await apiFetch(`/clients`, { method:'POST', body: JSON.stringify(body) });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Error al crear el cliente');
+        }
+        newClientModal.hide();
+        currentPage = 0;
+        loadClients();
+    } catch(e) {
+        showAlert(document.getElementById('new-client-alert'), e.message);
+    }
+}
+
+async function deleteClient(id) {
+    confirmAction('¿Desactivar cliente?', 'El cliente ya no podrá acceder al sistema.', async () => {
+        try {
+            const res = await apiFetch(`/clients/${id}`, { method:'DELETE' });
+            if (!res.ok) throw new Error('Error al desactivar el cliente');
+            successToast('Cliente desactivado correctamente');
+            loadClients();
+        } catch(e) {
+            alert(e.message);
+        }
+    });
+}
+</script>
+</body>
+</html>
+

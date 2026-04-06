@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Mi Perfil')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4>Mi Perfil</h4>
+            <p>Consulta y actualiza tus datos personales</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- TARJETA DE PERFIL -->
+        <div class="col-lg-4 fade-in-up">
+            <div class="card text-center p-4">
+                <div id="profile-avatar" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:800;margin:0 auto 1rem;">?</div>
+                <h5 id="profile-name" class="mb-1">—</h5>
+                <span id="profile-role-badge" class="badge mb-2">—</span>
+                <div style="font-size:.85rem;color:var(--text-muted);" id="profile-email"></div>
+                <hr/>
+                <div class="row g-2 text-start mt-1" id="profile-extra"></div>
+            </div>
+        </div>
+
+        <!-- FORMULARIO DE EDICIÓN -->
+        <div class="col-lg-8 fade-in-up delay-1">
+            <div class="card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-pencil-fill me-2" style="color:var(--orange)"></i>Editar perfil</h5>
+                </div>
+                <div class="card-body-p">
+                    <div id="profile-alert"></div>
+                    <!-- Formulario TRAINER -->
+                    <div id="form-trainer" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" id="tr-phone" class="form-control" placeholder="600 000 000"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Especialidad</label>
+                                <input type="text" id="tr-specialty" class="form-control" placeholder="Fitness, Yoga, Crossfit..."/>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Descripción</label>
+                                <textarea id="tr-description" class="form-control" rows="3" placeholder="Cuéntanos sobre tu experiencia..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn-orange" onclick="saveTrainerProfile()">
+                                    <i class="bi bi-check-lg"></i> Guardar cambios
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Formulario CLIENT -->
+                    <div id="form-client" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Edad</label>
+                                <input type="number" id="cl-age" class="form-control" placeholder="25"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Género</label>
+                                <select id="cl-gender" class="form-select">
+                                    <option value="">— Sin especificar —</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="O">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Nivel</label>
+                                <select id="cl-level" class="form-select">
+                                    <option value="">— Sin especificar —</option>
+                                    <option value="BEGINNER">Principiante</option>
+                                    <option value="INTERMEDIATE">Intermedio</option>
+                                    <option value="ADVANCED">Avanzado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Altura (cm)</label>
+                                <input type="number" id="cl-height" class="form-control" step="0.1"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Peso (kg)</label>
+                                <input type="number" id="cl-weight" class="form-control" step="0.1"/>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Objetivo</label>
+                                <input type="text" id="cl-goal" class="form-control" placeholder="Pérdida de grasa, hipertrofia..."/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lesiones</label>
+                                <input type="text" id="cl-injuries" class="form-control" placeholder="Rodilla, espalda..."/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Alergias</label>
+                                <input type="text" id="cl-allergies" class="form-control" placeholder="Gluten, lactosa..."/>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notas adicionales</label>
+                                <textarea id="cl-notes" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn-orange" onclick="saveClientProfile()">
+                                    <i class="bi bi-check-lg"></i> Guardar cambios
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ADMIN: sin formulario de edición específico -->
+                    <div id="form-admin" style="display:none;" class="text-muted text-center py-3">
+                        <i class="bi bi-shield-fill-check" style="font-size:2rem;color:var(--orange);display:block;margin-bottom:.5rem;"></i>
+                        Cuenta de administrador — gestiona el sistema desde el panel admin.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+const user = getUser();
+let clientId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadProfile();
+});
+
+async function loadProfile() {
+    try {
+        const res  = await apiFetch('/me');
+        const data = await res.json();
+
+        /* Avatar */
+        const initials = (data.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+        document.getElementById('profile-avatar').textContent = initials;
+        document.getElementById('profile-name').textContent   = data.name || '—';
+        document.getElementById('profile-email').textContent  = data.email || '';
+
+        const roleMap = { TRAINER:'Entrenador', CLIENT:'Cliente', ADMIN:'Administrador' };
+        const roleClsMap = { TRAINER:'badge-trainer', CLIENT:'badge-client', ADMIN:'badge-admin' };
+        const badge = document.getElementById('profile-role-badge');
+        badge.textContent  = roleMap[data.role] || data.role;
+        badge.className    = `badge ${roleClsMap[data.role] || ''}`;
+
+        if (data.role === 'TRAINER') {
+            document.getElementById('form-trainer').style.display = '';
+            document.getElementById('profile-extra').innerHTML = `
+                <div class="col-12"><small class="text-muted">Especialidad</small><div class="fw-600" style="font-weight:600;">${data.specialty||'—'}</div></div>
+                <div class="col-12 mt-2"><small class="text-muted">Teléfono</small><div>${data.phone||'—'}</div></div>
+            `;
+            /* Pre-rellenar */
+            document.getElementById('tr-phone').value       = data.phone || '';
+            document.getElementById('tr-specialty').value  = data.specialty || '';
+            document.getElementById('tr-description').value = data.description || '';
+
+        } else if (data.role === 'CLIENT') {
+            /* Guardar clientId en caché */
+            if (data.clientId) saveUser({ ...user, clientId: data.clientId });
+
+            if (!data.clientId) {
+                document.getElementById('form-client').style.display = '';
+                document.getElementById('profile-extra').innerHTML =
+                    `<div class="col-12 text-muted" style="font-size:.83rem;"><i class="bi bi-info-circle me-1"></i>Aún no tienes entrenador asignado.</div>`;
+                return;
+            }
+
+            /* Cargar datos del cliente */
+            const clientRes = await apiFetch(`/clients/${data.clientId}`).catch(() => null);
+            if (clientRes && clientRes.ok) {
+                const c = await clientRes.json();
+                clientId = c.id;
+                document.getElementById('form-client').style.display = '';
+                const levelMap = { BEGINNER:'Principiante', INTERMEDIATE:'Intermedio', ADVANCED:'Avanzado' };
+                document.getElementById('profile-extra').innerHTML = `
+                    <div class="col-6"><small class="text-muted">Nivel</small><div class="fw-600" style="font-weight:600;">${levelMap[c.level]||'—'}</div></div>
+                    <div class="col-6"><small class="text-muted">Peso</small><div>${c.weight ? c.weight+' kg' : '—'}</div></div>
+                    <div class="col-12 mt-2"><small class="text-muted">Entrenador</small><div>${c.trainerName||'Sin asignar'}</div></div>
+                `;
+                document.getElementById('cl-age').value       = c.age || '';
+                document.getElementById('cl-gender').value    = c.gender || '';
+                document.getElementById('cl-level').value     = c.level || '';
+                document.getElementById('cl-height').value    = c.height || '';
+                document.getElementById('cl-weight').value    = c.weight || '';
+                document.getElementById('cl-goal').value      = c.goal || '';
+                document.getElementById('cl-injuries').value  = c.injuries || '';
+                document.getElementById('cl-allergies').value = c.allergies || '';
+                document.getElementById('cl-notes').value     = c.notes || '';
+            } else {
+                document.getElementById('form-client').style.display = '';
+            }
+        } else {
+            document.getElementById('form-admin').style.display = '';
+        }
+
+        /* Actualizar caché de usuario */
+        saveUser({ ...user, ...data });
+
+    } catch(e) {
+        showAlert(document.getElementById('profile-alert'), 'Error al cargar el perfil');
+    }
+}
+
+async function saveTrainerProfile() {
+    const body = {
+        phone:       document.getElementById('tr-phone').value       || null,
+        specialty:   document.getElementById('tr-specialty').value   || null,
+        description: document.getElementById('tr-description').value || null
+    };
+    try {
+        const res = await apiFetch('/trainers/me', { method:'PUT', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error();
+        showAlert(document.getElementById('profile-alert'), '¡Perfil actualizado correctamente!', 'success');
+        await loadProfile();
+    } catch(e) {
+        showAlert(document.getElementById('profile-alert'), 'Error al guardar el perfil');
+    }
+}
+
+async function saveClientProfile() {
+    if (!clientId) return;
+    const body = {
+        age:       parseInt(document.getElementById('cl-age').value)       || null,
+        gender:    document.getElementById('cl-gender').value              || null,
+        level:     document.getElementById('cl-level').value               || null,
+        height:    parseFloat(document.getElementById('cl-height').value)  || null,
+        weight:    parseFloat(document.getElementById('cl-weight').value)  || null,
+        goal:      document.getElementById('cl-goal').value               || null,
+        injuries:  document.getElementById('cl-injuries').value            || null,
+        allergies: document.getElementById('cl-allergies').value           || null,
+        notes:     document.getElementById('cl-notes').value               || null
+    };
+    try {
+        const res = await apiFetch(`/clients/${clientId}`, { method:'PUT', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error();
+        showAlert(document.getElementById('profile-alert'), '¡Perfil actualizado correctamente!', 'success');
+        await loadProfile();
+    } catch(e) {
+        showAlert(document.getElementById('profile-alert'), 'Error al guardar el perfil');
+    }
+}
+</script>
+</body>
+</html>
+
+

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Dietas')}"/>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <h4>Dietas</h4>
+            <p>Gestiona los planes de nutrición de tus clientes</p>
+        </div>
+        <button class="btn-orange" id="btn-new-diet" onclick="openNewDiet()">
+            <i class="bi bi-plus-lg"></i> Nueva dieta
+        </button>
+    </div>
+
+    <!-- FILTRO POR CLIENTE -->
+    <div class="card mb-3 fade-in-up">
+        <div class="card-body-p py-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-sm-5 col-md-4">
+                    <label class="form-label mb-1">Filtrar por cliente</label>
+                    <select id="filter-client" class="form-select form-select-sm">
+                        <option value="">— Todos mis clientes —</option>
+                    </select>
+                </div>
+                <div class="col-sm-3 col-md-2">
+                    <label class="form-label mb-1">Estado</label>
+                    <select id="filter-active" class="form-select form-select-sm">
+                        <option value="">Todas</option>
+                        <option value="true">Activas</option>
+                        <option value="false">Inactivas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div id="diets-container" class="row g-3 fade-in-up delay-1"></div>
+</main>
+
+<!-- MODAL nueva/editar dieta -->
+<div class="modal fade" id="dietModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="diet-modal-title"><i class="bi bi-egg-fried me-2" style="color:var(--orange)"></i>Nueva dieta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="diet-alert"></div>
+                <input type="hidden" id="diet-id"/>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Cliente *</label>
+                        <select id="diet-client" class="form-select" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Título *</label>
+                        <input type="text" id="diet-title" class="form-control" placeholder="Dieta de definición"/>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Descripción</label>
+                        <textarea id="diet-desc" class="form-control" rows="2" placeholder="Detalles de la dieta..."></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha inicio</label>
+                        <input type="date" id="diet-start" class="form-control"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha fin</label>
+                        <input type="date" id="diet-end" class="form-control"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Estado</label>
+                        <select id="diet-active" class="form-select">
+                            <option value="true">Activa</option>
+                            <option value="false">Inactiva</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn-orange btn-sm" onclick="saveDiet()">
+                    <i class="bi bi-check-lg"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: comidas de una dieta -->
+<div class="modal fade" id="mealsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="meals-modal-title"><i class="bi bi-list-ul me-2" style="color:var(--orange)"></i>Comidas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="meals-alert"></div>
+                <input type="hidden" id="current-diet-id"/>
+
+                <!-- Nueva comida -->
+                <div class="card mb-3" style="background:#fafbfc;">
+                    <div class="card-body-p py-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label mb-1">Tipo</label>
+                                <input type="text" id="meal-type" class="form-control form-control-sm" placeholder="Desayuno"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label mb-1">Hora</label>
+                                <input type="time" id="meal-time" class="form-control form-control-sm"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label mb-1">Alimentos</label>
+                                <input type="text" id="meal-foods" class="form-control form-control-sm" placeholder="Avena, leche, plátano..."/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label mb-1">Kcal</label>
+                                <input type="number" id="meal-kcal" class="form-control form-control-sm" placeholder="350"/>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn-orange btn-sm" onclick="addMeal()">
+                                    <i class="bi bi-plus-lg"></i> Añadir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-overflow">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th><th>Hora</th><th>Alimentos</th><th>Kcal</th><th>Notas</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="meals-body">
+                            <tr><td colspan="6"><div class="text-center py-3 text-muted">Sin comidas registradas</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+const user = getUser();
+
+let dietModalBs, mealsModalBs;
+let myClients = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    dietModalBs  = new bootstrap.Modal(document.getElementById('dietModal'));
+    mealsModalBs = new bootstrap.Modal(document.getElementById('mealsModal'));
+
+    /* Ocultar botón nueva dieta para CLIENT */
+    if (user && user.role === 'CLIENT') {
+        document.getElementById('btn-new-diet').style.display = 'none';
+    }
+
+    await loadMyClients();
+    loadDiets();
+
+    document.getElementById('filter-client').addEventListener('change', loadDiets);
+    document.getElementById('filter-active').addEventListener('change', loadDiets);
+});
+
+async function loadMyClients() {
+    if (!user || user.role === 'CLIENT') return;
+    try {
+        const res  = await apiFetch('/clients?size=100');
+        const data = await res.json();
+        myClients = data.content || [];
+        const sel  = document.getElementById('filter-client');
+        const dietSel = document.getElementById('diet-client');
+        myClients.forEach(c => {
+            sel.innerHTML     += `<option value="${c.id}">${c.userName}</option>`;
+            dietSel.innerHTML += `<option value="${c.id}">${c.userName}</option>`;
+        });
+    } catch(e) {}
+}
+
+async function loadDiets() {
+    const container = document.getElementById('diets-container');
+    const clientId  = document.getElementById('filter-client').value;
+    const active    = document.getElementById('filter-active').value;
+    container.innerHTML = `<div class="col-12 text-center py-5"><div class="spinner-border text-secondary"></div></div>`;
+
+    try {
+        let diets = [];
+        if (user.role === 'CLIENT') {
+            const res  = await apiFetch(`/diets/client/${user.clientId || '0'}?size=50`);
+            const data = await res.json();
+            diets = data.content || data || [];
+        } else if (clientId) {
+            let url = `/diets/client/${clientId}?size=50`;
+            if (active !== '') url += `&active=${active}`;
+            const res  = await apiFetch(url);
+            const data = await res.json();
+            diets = data.content || data || [];
+        } else {
+            /* Cargar todas las dietas de todos los clientes */
+            for (const c of myClients) {
+                let url = `/diets/client/${c.id}?size=50`;
+                if (active !== '') url += `&active=${active}`;
+                const res  = await apiFetch(url);
+                const data = await res.json();
+                diets.push(...(data.content || data || []));
+            }
+        }
+
+        if (diets.length === 0) {
+            container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-egg-fried"></i><p>No hay dietas con estos filtros</p></div></div>`;
+            return;
+        }
+
+        container.innerHTML = diets.map(d => dietCard(d)).join('');
+    } catch(e) {
+        container.innerHTML = `<div class="col-12"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar dietas</p></div></div>`;
+    }
+}
+
+function dietCard(d) {
+    const isActive = d.active;
+    return `
+    <div class="col-md-6 col-xl-4 fade-in-up">
+        <div class="card h-100">
+            <div class="card-body-p">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge ${isActive ? 'badge-active' : 'badge-inactive'}">${isActive ? 'Activa' : 'Inactiva'}</span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-link p-0 text-muted" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" style="font-size:.85rem;">
+                            <li><a class="dropdown-item" href="#" onclick="openMeals(${d.id}, '${escStr(d.title)}')"><i class="bi bi-list-ul me-2"></i>Ver comidas</a></li>
+                            ${user.role !== 'CLIENT' ? `
+                            <li><a class="dropdown-item" href="#" onclick="openEditDiet(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteDiet(${d.id})"><i class="bi bi-trash me-2"></i>Eliminar</a></li>` : ''}
+                        </ul>
+                    </div>
+                </div>
+                <h6 class="fw-700 mb-1" style="font-weight:700;">${d.title}</h6>
+                <div class="text-muted mb-2" style="font-size:.82rem;"><i class="bi bi-person-fill me-1"></i>${d.clientName || '—'}</div>
+                ${d.description ? `<p class="text-muted mb-2" style="font-size:.83rem;line-height:1.4;">${d.description}</p>` : ''}
+                <div class="d-flex gap-3 mt-3" style="font-size:.8rem;color:var(--text-muted);">
+                    <span><i class="bi bi-calendar-event me-1"></i>${d.startDate ? formatDate(d.startDate) : '—'}</span>
+                    <span><i class="bi bi-calendar-x me-1"></i>${d.endDate ? formatDate(d.endDate) : '—'}</span>
+                </div>
+            </div>
+            <div class="border-top px-3 py-2">
+                <button class="btn btn-sm btn-outline-orange w-100" onclick="openMeals(${d.id}, '${escStr(d.title)}')">
+                    <i class="bi bi-list-ul me-1"></i> Ver comidas (${(d.meals||[]).length})
+                </button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function escStr(s) { return (s||'').replace(/'/g,"\\'"); }
+
+function openNewDiet() {
+    document.getElementById('diet-id').value     = '';
+    document.getElementById('diet-title').value  = '';
+    document.getElementById('diet-desc').value   = '';
+    document.getElementById('diet-start').value  = '';
+    document.getElementById('diet-end').value    = '';
+    document.getElementById('diet-active').value = 'true';
+    document.getElementById('diet-alert').innerHTML = '';
+    document.getElementById('diet-modal-title').innerHTML = '<i class="bi bi-egg-fried me-2" style="color:var(--orange)"></i>Nueva dieta';
+    if (myClients.length > 0) document.getElementById('diet-client').value = myClients[0].id;
+    dietModalBs.show();
+}
+
+function openEditDiet(d) {
+    document.getElementById('diet-id').value      = d.id;
+    document.getElementById('diet-client').value  = d.clientId;
+    document.getElementById('diet-title').value   = d.title;
+    document.getElementById('diet-desc').value    = d.description || '';
+    document.getElementById('diet-start').value   = d.startDate || '';
+    document.getElementById('diet-end').value     = d.endDate || '';
+    document.getElementById('diet-active').value  = String(d.active);
+    document.getElementById('diet-alert').innerHTML = '';
+    document.getElementById('diet-modal-title').innerHTML = '<i class="bi bi-pencil-fill me-2" style="color:var(--orange)"></i>Editar dieta';
+    dietModalBs.show();
+}
+
+async function saveDiet() {
+    const id = document.getElementById('diet-id').value;
+    const body = {
+        clientId:    parseInt(document.getElementById('diet-client').value),
+        title:       document.getElementById('diet-title').value,
+        description: document.getElementById('diet-desc').value || null,
+        startDate:   document.getElementById('diet-start').value || null,
+        endDate:     document.getElementById('diet-end').value || null,
+        active:      document.getElementById('diet-active').value === 'true'
+    };
+    if (!body.title) { showAlert(document.getElementById('diet-alert'), 'El título es obligatorio'); return; }
+    try {
+        const url = id ? `/diets/${id}` : '/diets';
+        const res = await apiFetch(url, { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error();
+        dietModalBs.hide();
+        loadDiets();
+    } catch(e) {
+        showAlert(document.getElementById('diet-alert'), 'Error al guardar la dieta');
+    }
+}
+
+async function deleteDiet(id) {
+    if (!confirm('¿Eliminar esta dieta?')) return;
+    await apiFetch(`/diets/${id}`, { method: 'DELETE' });
+    loadDiets();
+}
+
+async function openMeals(dietId, title) {
+    document.getElementById('current-diet-id').value = dietId;
+    document.getElementById('meals-modal-title').innerHTML =
+        `<i class="bi bi-list-ul me-2" style="color:var(--orange)"></i>${title}`;
+    document.getElementById('meals-alert').innerHTML = '';
+    mealsModalBs.show();
+    await loadMeals(dietId);
+}
+
+async function loadMeals(dietId) {
+    const body = document.getElementById('meals-body');
+    try {
+        const res  = await apiFetch(`/diets/${dietId}`);
+        const data = await res.json();
+        const meals = data.meals || [];
+        if (meals.length === 0) {
+            body.innerHTML = `<tr><td colspan="6"><div class="text-center py-3 text-muted">Sin comidas registradas</div></td></tr>`;
+            return;
+        }
+        body.innerHTML = meals.map(m => `
+        <tr>
+            <td><span class="fw-600" style="font-weight:600;">${m.mealType||'—'}</span></td>
+            <td>${m.mealTime||'—'}</td>
+            <td>${m.foods||'—'}</td>
+            <td>${m.calories ? m.calories + ' kcal' : '—'}</td>
+            <td>${m.notes||'—'}</td>
+            <td>
+                ${user.role !== 'CLIENT' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteMeal(${m.id})"><i class="bi bi-trash"></i></button>` : ''}
+            </td>
+        </tr>`).join('');
+    } catch(e) {
+        body.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Error al cargar</td></tr>`;
+    }
+}
+
+async function addMeal() {
+    const dietId = document.getElementById('current-diet-id').value;
+    const body = {
+        mealType: document.getElementById('meal-type').value,
+        mealTime: document.getElementById('meal-time').value || null,
+        foods:    document.getElementById('meal-foods').value,
+        calories: parseInt(document.getElementById('meal-kcal').value) || null
+    };
+    if (!body.mealType || !body.foods) {
+        showAlert(document.getElementById('meals-alert'), 'El tipo y los alimentos son obligatorios');
+        return;
+    }
+    try {
+        const res = await apiFetch(`/diets/${dietId}/meals`, { method:'POST', body: JSON.stringify(body) });
+        if (!res.ok) throw new Error();
+        document.getElementById('meal-type').value  = '';
+        document.getElementById('meal-time').value  = '';
+        document.getElementById('meal-foods').value = '';
+        document.getElementById('meal-kcal').value  = '';
+        await loadMeals(dietId);
+    } catch(e) {
+        showAlert(document.getElementById('meals-alert'), 'Error al añadir la comida');
+    }
+}
+
+async function deleteMeal(mealId) {
+    if (!confirm('¿Eliminar esta comida?')) return;
+    await apiFetch(`/diets/meals/${mealId}`, { method:'DELETE' });
+    await loadMeals(document.getElementById('current-diet-id').value);
+}
+</script>
+</body>
+</html>
+
