@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/head :: head('Chat | TFG FitApp')}"></div>
+    <style>
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 120px);
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .chat-sidebar {
+            width: 300px;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+        .chat-sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #fff;
+            font-weight: 600;
+        }
+        .contact-list {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .contact-item:hover, .contact-item.active {
+            background: #e2e8f0;
+        }
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+            background: #cbd5e1;
+        }
+        .contact-info {
+            flex: 1;
+        }
+        .contact-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1e293b;
+            margin-bottom: 2px;
+        }
+        .contact-role {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            background: #fff;
+        }
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        .message.sent {
+            align-self: flex-end;
+            background: #2563eb;
+            color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+        .message.received {
+            align-self: flex-start;
+            background: #fff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 2px;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .chat-input {
+            padding: 15px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 25px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input input:focus {
+            border-color: #2563eb;
+        }
+        .btn-send {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-send:hover {
+            background: #1d4ed8;
+        }
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            text-align: center;
+        }
+        .empty-chat i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+<div class="app-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <main class="main-content">
+        <header class="top-header">
+            <h1 class="page-title">Chat</h1>
+        </header>
+
+        <div class="chat-container">
+            <div class="chat-sidebar">
+                <div class="chat-sidebar-header">
+                    Contactos
+                </div>
+                <ul class="contact-list" id="contactList">
+                    <!-- Dinámico -->
+                </ul>
+            </div>
+
+            <div class="chat-main" id="chatMain">
+                <div class="empty-chat">
+                    <i class="fas fa-comments"></i>
+                    <h2>Selecciona un contacto</h2>
+                    <p>Elige una conversación de la lista para empezar a chatear.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "/login";
+        return;
+    }
+
+    const contactList = document.getElementById("contactList");
+    const chatMain = document.getElementById("chatMain");
+    let currentContactId = null;
+    let myId = null;
+    let pollingInterval = null;
+
+    // Obtener mi ID desde el token/me
+    fetch('/api/me', {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+        myId = data.id;
+        loadContacts();
+    }).catch(console.error);
+
+    function loadContacts() {
+        fetch('/api/chat/contacts', {
+            headers: { "Authorization": `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(contacts => {
+            contactList.innerHTML = '';
+            contacts.forEach(c => {
+                const li = document.createElement("li");
+                li.className = "contact-item";
+                li.dataset.id = c.id;
+
+                const roleTranslate = {
+                    "ADMIN": "Administrador",
+                    "TRAINER": "Entrenador",
+                    "CLIENT": "Cliente"
+                };
+
+                const avatarSrc = c.avatar || '/images/default-avatar.svg';
+
+                li.innerHTML = `
+                    <img src="${avatarSrc}" alt="${c.name}" class="contact-avatar" onerror="this.src='/images/default-avatar.svg'">
+                    <div class="contact-info">
+                        <div class="contact-name">${c.name}</div>
+                        <div class="contact-role">${roleTranslate[c.role] || c.role}</div>
+                    </div>
+                `;
+                li.addEventListener("click", () => selectContact(c));
+                contactList.appendChild(li);
+            });
+        });
+    }
+
+    function selectContact(contact) {
+        document.querySelectorAll(".contact-item").forEach(el => el.classList.remove("active"));
+        const item = document.querySelector(`.contact-item[data-id='${contact.id}']`);
+        if(item) item.classList.add("active");
+
+        currentContactId = contact.id;
+
+        chatMain.innerHTML = `
+            <div class="chat-header">
+                <h3>${contact.name}</h3>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="text-center text-muted" style="margin-top:auto;margin-bottom:auto">Cargando mensajes...</div>
+            </div>
+            <form class="chat-input" id="chatForm">
+                <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" required>
+                <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        `;
+
+        document.getElementById("chatForm").addEventListener("submit", (e) => {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        loadMessages();
+
+        if(pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(loadMessages, 3000);
+    }
+
+    function loadMessages() {
+        if(!currentContactId) return;
+
+        fetch(`/api/chat/messages/${currentContactId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(messages => {
+            const container = document.getElementById("chatMessages");
+            if(!container) return;
+
+            const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 10;
+
+            if(messages.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted" style="margin-top:auto;margin-bottom:auto">No hay mensajes aún. ¡Di hola!</div>`;
+                return;
+            }
+
+            let html = '';
+            messages.forEach(m => {
+                const isSent = m.senderId === myId;
+                const time = new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                html += `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        ${m.content}
+                        <div class="message-time">${time}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            if (isScrolledToBottom || container.dataset.firstLoad !== 'true') {
+                container.scrollTop = container.scrollHeight;
+                container.dataset.firstLoad = 'true';
+            }
+        });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const content = input.value.trim();
+        if(!content || !currentContactId) return;
+
+        input.value = '';
+
+        fetch('/api/chat/messages', {
+            method: 'POST',
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ receiverId: currentContactId, content: content })
+        })
+        .then(r => r.json())
+        .then(() => {
+            loadMessages();
+            const container = document.getElementById("chatMessages");
+            if(container) container.scrollTop = container.scrollHeight;
+        });
+    }
+});
+</script>
+</body>
+</html>

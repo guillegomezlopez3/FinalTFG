@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Constructor de Entrenamiento')}"/>
+    <style>
+        .builder-container { display: flex; gap: 20px; height: calc(100vh - 100px); }
+        .sidebar-catalog { width: 300px; background: #fff; border-radius: 12px; padding: 15px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .main-builder { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .day-selector { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .day-btn { flex: 1; min-width: 100px; padding: 10px; border: 2px solid #eaeaea; border-radius: 8px; background: #fff; cursor: pointer; text-align: center; font-weight: 600; color: #555; transition: all 0.2s; }
+        .day-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,87,34,0.05); }
+        .day-btn:hover { border-color: var(--orange); }
+
+        .muscle-group-btn { width: 100%; text-align: left; padding: 10px 15px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #eaeaea; background: #f9f9f9; color: #333; font-weight: 600; cursor: pointer; }
+        .muscle-group-btn:hover { background: #f1f1f1; }
+        .exercise-item { padding: 8px 15px; margin: 3px 0 3px 15px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; font-size: 0.9rem; }
+        .exercise-item:hover { background: rgba(255,87,34,0.1); border-color: var(--orange); color: var(--orange); font-weight: 500; }
+
+        .day-content { display: none; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); min-height: 300px; }
+        .day-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .exercise-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; position: relative; }
+        .exercise-card-title { font-weight: 600; color: #333; margin-bottom: 10px; padding-right: 30px; }
+        .exercise-delete { position: absolute; top: 15px; right: 15px; color: #dc3545; cursor: pointer; border: none; background: none; }
+
+        .param-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+        .param-input { font-size: 0.85rem; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <button class="btn btn-sm btn-light me-2" onclick="window.location.href='/dashboard/workouts'">
+                <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <h4 id="builder-title">Constructor de Plan</h4>
+            <p>Añade días y ejercicios de forma interactiva</p>
+        </div>
+        <button class="btn-orange" onclick="saveAllDays()">
+            <i class="bi bi-check2-circle"></i> Guardar Todo
+        </button>
+    </div>
+
+    <div class="builder-container fade-in-up delay-1">
+        <!-- CATÁLOGO DE EJERCICIOS -->
+        <aside class="sidebar-catalog">
+            <h6 class="mb-3"><i class="bi bi-collection-fill me-2" style="color:var(--orange)"></i>Catálogo</h6>
+            <input type="text" id="search-exercise" class="form-control form-control-sm mb-3" placeholder="Buscar ejercicio..." onkeyup="filterExercises()">
+            <div id="catalog-container">
+                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+            </div>
+            <div class="mt-4 border-top pt-3">
+                <p class="text-muted" style="font-size:0.8rem;">¿Falta alguno?</p>
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="addCustomExercise()">Añadir Personalizado</button>
+            </div>
+        </aside>
+
+        <!-- BUILDER PRINCIPAL -->
+        <div class="main-builder">
+            <div class="day-selector" id="day-selector">
+                <!-- Se inyectan los días -->
+            </div>
+            <div id="days-container">
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-hand-index-thumb mb-2" style="font-size:2rem; display:block"></i>
+                    Selecciona un día arriba para ver o añadir ejercicios
+                </div>
+                <!-- Se inyectan los contenedores de los días -->
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+const user = getUser();
+if(user && user.role === 'CLIENT') {
+    window.location.href = '/dashboard/workouts';
+}
+
+const DAYS_OF_WEEK = [
+    { id: 'MONDAY', label: 'Lunes' },
+    { id: 'TUESDAY', label: 'Martes' },
+    { id: 'WEDNESDAY', label: 'Miércoles' },
+    { id: 'THURSDAY', label: 'Jueves' },
+    { id: 'FRIDAY', label: 'Viernes' },
+    { id: 'SATURDAY', label: 'Sábado' },
+    { id: 'SUNDAY', label: 'Domingo' }
+];
+
+let predefinedCatalog = {};
+// Estado interno del builder: { dayOfWeek: { dayId: null, focus: '', exercises: [] } }
+let builderData = {};
+let currentPlanId = new URLSearchParams(window.location.search).get('planId');
+let activeDayId = null;
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!currentPlanId) {
+        alert('No se especificó un plan. Vuelve atrás e intenta de nuevo.');
+        window.location.href = '/dashboard/workouts';
+        return;
+    }
+
+    // Iniciar botones de días
+    const dSel = document.getElementById('day-selector');
+    DAYS_OF_WEEK.forEach(d => {
+        builderData[d.id] = { exists: false, data: null, uiExercises: [] };
+        const btn = document.createElement('div');
+        btn.className = 'day-btn';
+        btn.id = 'btn-day-' + d.id;
+        btn.innerText = d.label;
+        btn.onclick = () => selectDay(d.id);
+        dSel.appendChild(btn);
+    });
+
+    await Promise.all([ loadCatalog(), loadPlanData() ]);
+
+    // Seleccionar el primer día que tenga ejercicios o Lunes
+    let firstActive = DAYS_OF_WEEK.find(d => builderData[d.id].exists) || DAYS_OF_WEEK[0];
+    selectDay(firstActive.id);
+});
+
+async function loadCatalog() {
+    try {
+        const res = await apiFetch('/predefined-exercises/grouped');
+        predefinedCatalog = await res.json();
+        renderCatalog();
+    } catch(e) {
+        document.getElementById('catalog-container').innerHTML = '<p class="text-danger small">Error cargando catálogo</p>';
+    }
+}
+
+function translateMuscleGroup(c) {
+    const d = { CHEST:'Pecho', BACK:'Espalda', LEGS:'Piernas', SHOULDERS:'Hombros', ARMS:'Brazos', CORE:'Core', CARDIO:'Cardio', FULL_BODY:'Full Body' };
+    return d[c] || c;
+}
+
+function renderCatalog() {
+    const cont = document.getElementById('catalog-container');
+    cont.innerHTML = '';
+    const q = document.getElementById('search-exercise').value.toLowerCase();
+
+    Object.keys(predefinedCatalog).forEach(category => {
+        const exercises = predefinedCatalog[category];
+        // Filtrar
+        const filtered = exercises.filter(ex => ex.name.toLowerCase().includes(q));
+        if (filtered.length === 0) return;
+
+        // Crear categoría
+        const catBtn = document.createElement('button');
+        catBtn.className = 'muscle-group-btn';
+        catBtn.innerHTML = `<i class="bi bi-chevron-down me-2" style="font-size:0.8rem"></i> ${translateMuscleGroup(category)}`;
+        const listDiv = document.createElement('div');
+        listDiv.style.display = q ? 'block' : 'none';
+
+        catBtn.onclick = () => { listDiv.style.display = listDiv.style.display === 'none' ? 'block' : 'none'; };
+
+        filtered.forEach(ex => {
+            const exDiv = document.createElement('div');
+            exDiv.className = 'exercise-item';
+            exDiv.innerHTML = `${ex.name} <small class="text-muted d-block" style="font-size:0.7rem">${ex.equipment||''}</small>`;
+            exDiv.onclick = () => appendExerciseToCurrentDay(ex.name);
+            listDiv.appendChild(exDiv);
+        });
+
+        cont.appendChild(catBtn);
+        cont.appendChild(listDiv);
+
+        if (q) listDiv.style.display = 'block'; // Expandir si busca
+    });
+}
+
+function filterExercises() { renderCatalog(); }
+
+async function loadPlanData() {
+    try {
+        const res = await apiFetch(`/workout-plans/${currentPlanId}`);
+        const plan = await res.json();
+        document.getElementById('builder-title').innerText = 'Plan: ' + plan.title;
+
+        (plan.workoutDays || []).forEach(d => {
+            builderData[d.dayOfWeek] = {
+                exists: true,
+                dayId: d.id,
+                focus: d.focus || '',
+                uiExercises: d.exercises || []
+            };
+        });
+
+        // Crear content divs
+        const cont = document.getElementById('days-container');
+        cont.innerHTML = '';
+        DAYS_OF_WEEK.forEach(dow => {
+            const dDiv = document.createElement('div');
+            dDiv.className = 'day-content';
+            dDiv.id = 'content-day-' + dow.id;
+
+            const bd = builderData[dow.id];
+            dDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h5 class="m-0">${dow.label}</h5>
+                    <div class="form-check form-switch m-0" style="margin: 0; padding-left:2.5em;">
+                        <input class="form-check-input" type="checkbox" id="switch-${dow.id}" ${bd.exists ? 'checked' : ''} onchange="toggleDayStatus('${dow.id}')">
+                        <label class="form-check-label" for="switch-${dow.id}">Activar este día</label>
+                    </div>
+                </div>
+
+                <div id="day-form-${dow.id}" style="${bd.exists ? 'display:block;' : 'display:none;'}">
+                    <div class="mb-3">
+                        <label class="form-label small">Enfoque de entrenamiento</label>
+                        <input type="text" class="form-control form-control-sm focus-input" data-day="${dow.id}" value="${bd.focus||''}" placeholder="Ej: Empuje, Tren Inferior...">
+                    </div>
+                    <h6>Ejercicios</h6>
+                    <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Haz clic en cualquier ejercicio del catálogo para añadirlo aquí y luego rellena series, reps y descanso.</p>
+                    <div id="ex-list-${dow.id}" class="exercises-container" style="min-height: 100px;">
+                    </div>
+                </div>
+            `;
+            cont.appendChild(dDiv);
+
+            // Renderizar ejercicios de bd.uiExercises
+            if (bd.exists && bd.uiExercises) {
+                bd.uiExercises.forEach(ex => appendExCard(dow.id, ex));
+            }
+
+            // Sortable
+            new Sortable(document.getElementById('ex-list-' + dow.id), {
+                animation: 150,
+                ghostClass: 'sortable-ghost'
+            });
+        });
+
+    } catch(e) {
+        successToast('Error cargando el plan principal');
+    }
+}
+
+function selectDay(dow) {
+    activeDayId = dow;
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.day-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('btn-day-'+dow).classList.add('active');
+    document.getElementById('content-day-'+dow).classList.add('active');
+}
+
+function toggleDayStatus(dow) {
+    const active = document.getElementById('switch-'+dow).checked;
+    builderData[dow].exists = active;
+    document.getElementById('day-form-'+dow).style.display = active ? 'block' : 'none';
+}
+
+function addCustomExercise() {
+    const name = prompt("Nombre del ejercicio manual:");
+    if (!name) return;
+    appendExerciseToCurrentDay(name);
+}
+
+function appendExerciseToCurrentDay(name) {
+    if (!activeDayId) {
+        alert("Selecciona un día primero"); return;
+    }
+    // Activar día si no lo estaba
+    const checkbox = document.getElementById('switch-'+activeDayId);
+    if (!checkbox.checked) {
+        checkbox.checked = true;
+        toggleDayStatus(activeDayId);
+    }
+
+    appendExCard(activeDayId, { name, sets: 4, reps: '10', restSeconds: 90, id: null });
+    successToast(`Añadido: ${name}`, 'success');
+}
+
+function appendExCard(dow, ex) {
+    const container = document.getElementById('ex-list-'+dow);
+    const div = document.createElement('div');
+    div.className = 'exercise-card';
+    div.dataset.exId = ex.id || '';
+
+    div.innerHTML = `
+        <div class="exercise-card-title"><i class="bi bi-grip-vertical text-muted me-1" style="cursor:grab"></i> ${ex.name}</div>
+        <button class="exercise-delete text-danger" title="Eliminar" onclick="this.parentElement.remove()"><i class="bi bi-x-circle-fill"></i></button>
+        <div class="param-row">
+            <input type="hidden" class="ex-name" value="${ex.name}">
+            <div>
+                <label class="form-label mb-1" style="font-size:0.75rem;">Series</label>
+                <input type="number" class="form-control param-input ex-sets" value="${ex.sets||''}">
+            </div>
+            <div>
+                <label class="form-label mb-1" style="font-size:0.75rem;">Repeticiones</label>
+                <input type="text" class="form-control param-input ex-reps" value="${ex.reps||''}">
+            </div>
+            <div>
+                <label class="form-label mb-1" style="font-size:0.75rem;">Descanso (s)</label>
+                <input type="number" class="form-control param-input ex-rest" value="${ex.restSeconds||''}">
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+async function saveAllDays() {
+    const btn = document.querySelector('.btn-orange');
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+    btn.disabled = true;
+
+    try {
+        // En lugar de enviar un JSON gigante que el backend no soporta fácilmente,
+        // vamos a borrar todos los días antiguos y recrearlos, o coordinar peticiones asíncronas.
+        // Lo más seguro para esta API:
+        // 1. Buscar días actuales en el backend.
+        const res1 = await apiFetch(`/workout-plans/${currentPlanId}`);
+        const currentData = await res1.json();
+
+        // 2. Por cada día activo en UI (checkbox marcado):
+        for (let dow of DAYS_OF_WEEK) {
+            const domDay = document.getElementById('switch-'+dow.id);
+            const isEnabled = domDay.checked;
+            const focusVal = document.querySelector(`.focus-input[data-day="${dow.id}"]`).value;
+
+            // Buscar si ya existía el día
+            const existingDay = (currentData.workoutDays||[]).find(d => d.dayOfWeek === dow.id);
+
+            if (isEnabled) {
+                // Hay que guardarlo
+                let dayId = existingDay ? existingDay.id : null;
+                if (!dayId) {
+                    // Crear día
+                    const resD = await apiFetch(`/workout-plans/${currentPlanId}/days`, {
+                        method: 'POST', body: JSON.stringify({ dayOfWeek: dow.id, focus: focusVal })
+                    });
+                    const created = await resD.json();
+                    dayId = created.id;
+                } else {
+                    // Actualizar día focus (aunque el backend existente igual no lo cambie directamente si no hay endpoint, pero /days/{id} existe)
+                    await apiFetch(`/workout-plans/days/${dayId}`, {
+                        method: 'PUT', body: JSON.stringify({ dayOfWeek: existingDay.dayOfWeek, focus: focusVal })
+                    });
+                }
+
+                // Borrar todos los ejercicios que tuviera para reemplazarlos con el nuevo orden
+                // (Para que sea fiel al UI)
+                if (existingDay && existingDay.exercises) {
+                    for (let x of existingDay.exercises) {
+                        await apiFetch(`/workout-plans/exercises/${x.id}`, { method: 'DELETE' });
+                    }
+                }
+
+                // Crearlos 1 a 1 según la lista del drag&drop
+                const exCards = document.getElementById('ex-list-'+dow.id).querySelectorAll('.exercise-card');
+                for (let card of exCards) {
+                    const exReq = {
+                        name: card.querySelector('.ex-name').value,
+                        sets: parseInt(card.querySelector('.ex-sets').value) || null,
+                        reps: card.querySelector('.ex-reps').value || null,
+                        restSeconds: parseInt(card.querySelector('.ex-rest').value) || null
+                    };
+                    await apiFetch(`/workout-plans/days/${dayId}/exercises`, {
+                        method: 'POST', body: JSON.stringify(exReq)
+                    });
+                }
+            } else {
+                // Si no está habilitado pero existía, lo borramos
+                if (existingDay) {
+                    await apiFetch(`/workout-plans/days/${existingDay.id}`, { method: 'DELETE' });
+                }
+            }
+        }
+
+        successToast("¡Plan guardado con éxito!");
+        setTimeout(() => { window.location.href = '/dashboard/workouts'; }, 1000);
+    } catch(e) {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+        alert('Error al guardar el plan. Se interrumpió el proceso.');
+    }
+}
+</script>
+</body>
+</html>

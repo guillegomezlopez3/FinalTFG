@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Constructor de Dietas')}"/>
+    <style>
+        .builder-container { display: flex; gap: 20px; height: calc(100vh - 100px); }
+        .sidebar-catalog { width: 300px; background: #fff; border-radius: 12px; padding: 15px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .main-builder { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .meal-selector { flex-shrink: 0; display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        #meals-container { flex: 1; overflow-y: auto; padding-right: 5px; padding-bottom: 30px; }
+        .meal-btn { flex: 1; min-width: 100px; padding: 10px; border: 2px solid #eaeaea; border-radius: 8px; background: #fff; cursor: pointer; text-align: center; font-weight: 600; color: #555; transition: all 0.2s; }
+        .meal-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,87,34,0.05); }
+        .meal-btn:hover { border-color: var(--orange); }
+
+        .category-btn { width: 100%; text-align: left; padding: 10px 15px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #eaeaea; background: #f9f9f9; color: #333; font-weight: 600; cursor: pointer; }
+        .category-btn:hover { background: #f1f1f1; }
+        .food-item { padding: 8px 15px; margin: 3px 0 3px 15px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; font-size: 0.9rem; }
+        .food-item:hover { background: rgba(139,195,74,0.1); border-color: #8bc34a; color: #558b2f; font-weight: 500; }
+
+        .meal-content { display: none; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); min-height: 300px; }
+        .meal-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .option-card { background: #fdfdfd; border: 1px solid #eee; border-radius: 12px; padding: 20px; margin-bottom: 20px; position: relative; border-left: 5px solid var(--orange); }
+        .option-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+
+        .food-row { display: grid; grid-template-columns: 2fr 1fr 1fr 2fr auto; gap: 10px; align-items: center; background: white; padding: 10px; border-radius: 8px; border: 1px solid #f1f1f1; margin-bottom: 8px; }
+        .food-row input { font-size: 0.85rem; border: 1px solid #ddd; padding: 6px; border-radius: 4px; width: 100%; }
+        .food-row input:focus { outline: none; border-color: var(--orange); }
+
+        .drag-handle { cursor: grab; color: #ccc; }
+        .delete-btn { color: #dc3545; cursor: pointer; background: none; border: none; font-size: 1.2rem; }
+        .delete-btn:hover { color: #bb2d3b; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="topbar fade-in-up">
+        <div class="topbar-left">
+            <button class="btn btn-sm btn-light me-2" onclick="window.location.href='/dashboard/diets'">
+                <i class="bi bi-arrow-left"></i> Volver a Dietas
+            </button>
+            <h4 id="builder-title">Constructor de Menús</h4>
+            <p>Diseña los menús interactivos de la dieta</p>
+        </div>
+        <button class="btn-orange" onclick="saveAllMeals()">
+            <i class="bi bi-check2-circle"></i> Guardar Dieta
+        </button>
+    </div>
+
+    <div class="builder-container fade-in-up delay-1">
+        <!-- CATÁLOGO DE ALIMENTOS -->
+        <aside class="sidebar-catalog">
+            <h6 class="mb-3"><i class="bi bi-basket-fill me-2" style="color:#8bc34a"></i>Alimentos</h6>
+            <input type="text" id="search-food" class="form-control form-control-sm mb-3" placeholder="Buscar alimento..." onkeyup="filterFoods()">
+            <div id="catalog-container">
+                <!-- Se inyecta catálogo -->
+            </div>
+            <div class="mt-4 border-top pt-3">
+                <p class="text-muted" style="font-size:0.8rem;">¿No encuentras alguno?</p>
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="addCustomFood()">Añadir Personalizado</button>
+            </div>
+        </aside>
+
+        <!-- BUILDER PRINCIPAL -->
+        <div class="main-builder">
+            <div class="meal-selector" id="meal-selector">
+                <!-- Botones inyectados aquí -->
+            </div>
+            <div id="meals-container">
+                <div class="text-center py-5 text-muted" id="empty-state">
+                    <i class="bi bi-hand-index-thumb mb-2" style="font-size:2rem; display:block"></i>
+                    Selecciona una comida arriba para empezar
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+requireAuth();
+const user = getUser();
+if(user && user.role === 'CLIENT') {
+    window.location.href = '/dashboard/diets';
+}
+
+const params = new URLSearchParams(window.location.search);
+const dietId = params.get('dietId');
+if (!dietId) {
+    alert('No se especificó la dieta');
+    window.location.href = '/dashboard/diets';
+}
+
+const MEAL_TYPES = [
+    { id: 'DESAYUNO', label: 'Desayuno' },
+    { id: 'ALMUERZO', label: 'Almuerzo' },
+    { id: 'COMIDA', label: 'Comida' },
+    { id: 'MERIENDA', label: 'Merienda' },
+    { id: 'CENA', label: 'Cena' }
+];
+
+const PREDEFINED_FOODS = {
+    "Proteínas": ["Pollo (pechuga)", "Pavo (pechuga)", "Ternera", "Atún", "Salmón", "Merluza", "Cerdo magro", "Huevos enteros", "Claras de huevo", "Tofu", "Tempeh", "Seitan", "Soja texturizada", "Proteína Whey", "Queso fresco batido", "Requesón", "Yogur griego"],
+    "Carbohidratos": ["Arroz blanco", "Arroz integral", "Avena", "Pasta", "Patata", "Boniato", "Boniato asado", "Quinoa", "Pan integral", "Pan de centeno", "Tortitas de arroz", "Tortitas de maíz", "Cuscús", "Lentejas", "Garbanzos", "Alubias", "Guisantes", "Copos de maíz"],
+    "Grasas": ["Aceite de oliva virgen extra", "Aguacate", "Almendras", "Nueces", "Cacahuetes", "Pistachos", "Anacardos", "Crema de cacahuete", "Crema de almendras", "Semillas de chía", "Semillas de lino", "Semillas de calabaza", "Chocolate negro 85%", "Coco", "Aceitunas", "Salmón (grasa)"],
+    "Verduras": ["Brócoli", "Espinacas", "Calabacín", "Berenjena", "Tomate", "Cebolla", "Pimiento", "Espárragos", "Zanahoria", "Pepino", "Lechuga", "Canónigos", "Rúcula", "Champiñones", "Setas", "Coliflor", "Judías verdes", "Alcárragos", "Puerro", "Repollo", "Col", "Coles de Bruselas"],
+    "Frutas": ["Plátano", "Manzana", "Naranja", "Pera", "Mandarina", "Kiwi", "Fresa", "Melón", "Sandía", "Melocotón", "Cereza", "Uva", "Piña", "Ciruela", "Mango", "Papaya", "Arándanos", "Frambuesas", "Moras", "Granada", "Higos", "Limón", "Pomelo"],
+    "Lácteos y Otros": ["Leche desnatada", "Leche semidesnatada", "Leche entera", "Bebida de avena", "Bebida de soja", "Bebida de almendras", "Bebida de arroz", "Queso tierno", "Queso semicurado", "Queso curado", "Queso de cabra", "Queso de oveja", "Queso mozzarella", "Queso parmesano", "Queso cheddar", "Queso edam", "Queso gouda", "Queso roquefort"],
+    "Bebidas y Extras": ["Agua", "Café solo", "Café con leche", "Té verde", "Té rojo", "Té negro", "Té blanco", "Infusión", "Zumo de naranja natural", "Sirope sin calorías", "Miel", "Salsa de soja", "Ketchup", "Mostaza", "Mayonesa", "Salsa picante", "Salsa barbacoa", "Vinagre", "Sal", "Pimienta", "Orégano", "Perejil", "Ajo en polvo", "Cebolla en polvo", "Pimentón", "Cúrcuma", "Comino", "Curry", "Jengibre", "Canela"]
+};
+
+// block para almacenar lo que edita el usuario
+let builderData = {};
+MEAL_TYPES.forEach(m => {
+    builderData[m.id] = { exists: false, options: [] }; // options: array de comidas y sus items
+});
+let activeMealId = null;
+
+// Backend Data
+let dbMeals = [];
+
+async function initBuilder() {
+    renderMainLayout();
+    renderCatalog();
+
+    try {
+        const res = await apiFetch(`/diets/${dietId}`);
+        if(res.ok) {
+            const d = await res.json();
+            document.getElementById('builder-title').innerText = `Menú: ${d.title}`;
+            dbMeals = d.meals || [];
+            mapDbToBuilder(dbMeals);
+        } else {
+            alert("No se pudo cargar la dieta");
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Error cargando dieta");
+    }
+
+    renderAllMealsContent();
+}
+
+function renderMainLayout() {
+    const s = document.getElementById('meal-selector');
+    s.innerHTML = MEAL_TYPES.map(m => `
+        <button class="meal-btn" id="btn-meal-${m.id}" onclick="selectMeal('${m.id}')">${m.label}</button>
+    `).join('');
+
+    const c = document.getElementById('meals-container');
+    let html = c.innerHTML; // keep empty state
+    MEAL_TYPES.forEach(m => {
+        html += `
+        <div class="meal-content" id="content-meal-${m.id}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0" style="color:var(--orange)">
+                    <i class="bi bi-egg-fried me-2"></i>${m.label}
+                </h5>
+                <div class="form-check form-switch fs-5">
+                    <input class="form-check-input" type="checkbox" id="switch-${m.id}" onchange="toggleMealStatus('${m.id}')">
+                    <label class="form-check-label ms-2" style="font-size:1rem;">Activar Comida</label>
+                </div>
+            </div>
+
+            <div id="meal-form-${m.id}" style="display:none;">
+                <div class="mb-3 d-flex justify-content-between align-items-center border-bottom pb-2">
+                    <span class="text-muted"><i class="bi bi-info-circle me-1"></i>Añade opciones para que el cliente elija (Ej: Opción 1, Opción 2)</span>
+                    <button class="btn btn-sm btn-outline-success" onclick="addOption('${m.id}')"><i class="bi bi-plus-lg"></i> Añadir Opción</button>
+                </div>
+                <div id="options-container-${m.id}" class="options-container">
+                    <!-- Options for this meal -->
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    c.innerHTML = html;
+}
+
+function selectMeal(typeId) {
+    activeMealId = typeId;
+    document.getElementById('empty-state').style.display = 'none';
+    document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.meal-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('btn-meal-'+typeId).classList.add('active');
+    document.getElementById('content-meal-'+typeId).classList.add('active');
+}
+
+function toggleMealStatus(typeId) {
+    const active = document.getElementById('switch-'+typeId).checked;
+    builderData[typeId].exists = active;
+    document.getElementById('meal-form-'+typeId).style.display = active ? 'block' : 'none';
+
+    // Si se activa y no hay opciones, crear una por defecto
+    if(active && builderData[typeId].options.length === 0) {
+        addOption(typeId);
+    }
+}
+
+function renderCatalog() {
+    let catHtml = '';
+    for(const [category, foods] of Object.entries(PREDEFINED_FOODS)) {
+        catHtml += `
+            <div class="catalog-category">
+                <button class="category-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display==='none'?'block':'none'">
+                    ${category}
+                </button>
+                <div class="category-foods" style="display:none;">
+                    ${foods.map(f => `<div class="food-item" onclick="appendFoodToActiveOption('${f.replace(/'/g, "\\'")}')"><i class="bi bi-plus-circle me-2 text-muted"></i>${f}</div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    document.getElementById('catalog-container').innerHTML = catHtml;
+}
+
+function filterFoods() {
+    const q = document.getElementById('search-food').value.toLowerCase();
+    document.querySelectorAll('.catalog-category').forEach(cat => {
+        let hasMatch = false;
+        cat.querySelectorAll('.food-item').forEach(item => {
+            if(item.innerText.toLowerCase().includes(q)) {
+                item.style.display = 'block';
+                hasMatch = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        const list = cat.querySelector('.category-foods');
+        if(q.length > 0) {
+            list.style.display = 'block';
+            cat.style.display = hasMatch ? 'block' : 'none';
+        } else {
+            list.style.display = 'none';
+            cat.style.display = 'block';
+        }
+    });
+}
+
+function addCustomFood() {
+    const name = prompt("Nombre del alimento:");
+    if(!name) return;
+    appendFoodToActiveOption(name);
+}
+
+// Para añadir un alimento, se necesita saber a qué opción hacerlo.
+// Añadiremos una variable que se actualiza al hacer clic o focus en una opción
+let activeOptionIndex = null;
+
+function setActiveOption(mealId, optIndex) {
+    activeOptionIndex = optIndex;
+    // Visually highlight it maybe?
+}
+
+function addOption(mealId) {
+    builderData[mealId].options.push({
+        name: `Opción ${builderData[mealId].options.length + 1}`,
+        items: []
+    });
+    renderOptions(mealId);
+    // Auto focus the new option
+    activeOptionIndex = builderData[mealId].options.length - 1;
+}
+
+function deleteOption(mealId, optIndex) {
+    if(!confirm("¿Eliminar esta opción completa?")) return;
+    builderData[mealId].options.splice(optIndex, 1);
+    renderOptions(mealId);
+}
+
+function appendFoodToActiveOption(foodName) {
+    if(!activeMealId) { alert("Selecciona una comida (ej: Desayuno) primero"); return; }
+
+    const meal = builderData[activeMealId];
+    if(!meal.exists) {
+        document.getElementById('switch-'+activeMealId).checked = true;
+        toggleMealStatus(activeMealId);
+    }
+
+    if(meal.options.length === 0) {
+        addOption(activeMealId);
+    }
+
+    if(activeOptionIndex === null || activeOptionIndex >= meal.options.length) {
+        activeOptionIndex = 0;
+    }
+
+    meal.options[activeOptionIndex].items.push({
+        name: foodName,
+        grams: '',
+        kcal: '',
+        notes: ''
+    });
+
+    renderOptions(activeMealId);
+}
+
+function removeFood(mealId, optIndex, itemIndex) {
+    builderData[mealId].options[optIndex].items.splice(itemIndex, 1);
+    renderOptions(mealId);
+}
+
+function updateFoodVal(mealId, optIndex, itemIndex, field, val) {
+    builderData[mealId].options[optIndex].items[itemIndex][field] = val;
+}
+
+function updateOptionName(mealId, optIndex, val) {
+    builderData[mealId].options[optIndex].name = val;
+}
+
+function renderOptions(mealId) {
+    const container = document.getElementById('options-container-'+mealId);
+    if(!container) return;
+
+    const options = builderData[mealId].options;
+    if(options.length === 0) {
+        container.innerHTML = '<p class="text-muted fst-italic">No hay opciones creadas. Añade una para empezar.</p>';
+        return;
+    }
+
+    let html = '';
+    options.forEach((opt, oIdx) => {
+        html += `
+        <div class="option-card" onclick="setActiveOption('${mealId}', ${oIdx})">
+            <div class="option-header">
+                <input type="text" class="form-control fw-bold border-0 bg-transparent fs-5 w-auto px-0"
+                       value="${opt.name}" onchange="updateOptionName('${mealId}', ${oIdx}, this.value)"
+                       style="box-shadow:none;">
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteOption('${mealId}', ${oIdx})"><i class="bi bi-trash"></i></button>
+            </div>
+            <div class="items-list" id="items-${mealId}-${oIdx}">
+                <!-- Cabecera de tabla falsa -->
+                ${opt.items.length > 0 ? `
+                <div class="d-grid mb-2 text-muted fw-bold" style="grid-template-columns: 2fr 1fr 1fr 2fr auto; gap: 10px; font-size:0.85rem; padding: 0 10px;">
+                    <div>Alimento</div>
+                    <div>Cant. (g/ml)</div>
+                    <div>Kcal (Opc)</div>
+                    <div>Notas/Prep</div>
+                    <div></div>
+                </div>
+                ` : '<div class="text-muted small py-2 mb-2 text-center bg-light rounded border border-dashed">Haz clic en el catálogo izquierdo para añadir alimentos a esta opción</div>'}
+        `;
+
+        opt.items.forEach((item, iIdx) => {
+            html += `
+                <div class="food-row">
+                    <input type="text" value="${item.name}" onchange="updateFoodVal('${mealId}', ${oIdx}, ${iIdx}, 'name', this.value)" placeholder="Ej: Avena">
+                    <input type="text" value="${item.grams}" onchange="updateFoodVal('${mealId}', ${oIdx}, ${iIdx}, 'grams', this.value)" placeholder="Ej: 50g">
+                    <input type="number" value="${item.kcal}" onchange="updateFoodVal('${mealId}', ${oIdx}, ${iIdx}, 'kcal', this.value)" placeholder="Kcal">
+                    <input type="text" value="${item.notes}" onchange="updateFoodVal('${mealId}', ${oIdx}, ${iIdx}, 'notes', this.value)" placeholder="Ej: Con agua">
+                    <button class="delete-btn" onclick="removeFood('${mealId}', ${oIdx}, ${iIdx})" title="Quitar"><i class="bi bi-x-circle-fill"></i></button>
+                </div>
+            `;
+        });
+
+        html += `
+            </div>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    // Sortable JS para arrastrar alimentos? Podríamos, pero puede ser overkill ahora.
+}
+
+function mapDbToBuilder(mealsArray) {
+    mealsArray.forEach(m => {
+        let type = m.mealType;
+        if(builderData[type]) {
+            builderData[type].exists = true;
+            builderData[type].dbId = m.id;
+
+            // El campo foods almacena un array JSON con las opciones. Si existía algo viejo, se parsea
+            try {
+                let parsed = JSON.parse(m.foods);
+                if(Array.isArray(parsed)) {
+                    // Si es el nuevo array de opciones estructural
+                    if(parsed.length > 0 && parsed[0].name !== undefined && parsed[0].items !== undefined) {
+                        builderData[type].options = parsed;
+                    } else {
+                        // Viejo formato, migramos a opcion unica
+                        builderData[type].options = [{ name: 'Opción 1', items: parsed }];
+                    }
+                }
+            } catch(e) {
+                // Era un texto crudo
+                builderData[type].options = [{
+                    name: 'Opción 1',
+                    items: [{ name: m.foods, grams: '', kcal: m.calories || '', notes: m.notes || '' }]
+                }];
+            }
+        }
+    });
+}
+
+function renderAllMealsContent() {
+    MEAL_TYPES.forEach(m => {
+        if(builderData[m.id].exists) {
+            document.getElementById('switch-'+m.id).checked = true;
+            toggleMealStatus(m.id);
+            renderOptions(m.id);
+        }
+    });
+}
+
+async function saveAllMeals() {
+    const saveBtn = document.querySelector('.topbar .btn-orange');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+    try {
+        // En un enfoque CRUD puro, borramos todas las comidas y las re-creamos,
+        // pero como los endpoints son /{dietId}/meals POST y PUT (no hay DELETE todo de golpe),
+        // Vamos a comparar y hacer requests.
+
+        for(const m of MEAL_TYPES) {
+            const data = builderData[m.id];
+            // Si tiene dbId y existe, PUT. Si tiene dbId y no existe, DELETE.
+            // Si no tiene dbId y existe, POST.
+
+            if(data.exists && data.options.length > 0) {
+                // Sumar calorias totales de la primera opción como referencia
+                let totalKcal = 0;
+                data.options[0].items.forEach(it => {
+                    const k = parseInt(it.kcal);
+                    if(!isNaN(k)) totalKcal += k;
+                });
+
+                const payload = {
+                    mealType: m.id,
+                    mealTime: '', // Podriamos añadir hora
+                    foods: JSON.stringify(data.options), // Guardamos como JSON estructurado
+                    calories: totalKcal,
+                    notes: ''
+                };
+
+                if(data.dbId) {
+                    // PUT
+                    await apiFetch(`/diets/meals/${data.dbId}`, { method: 'PUT', body: JSON.stringify(payload) });
+                } else {
+                    // POST
+                    await apiFetch(`/diets/${dietId}/meals`, { method: 'POST', body: JSON.stringify(payload) });
+                }
+            } else if (data.dbId && !data.exists) {
+                // DELETE
+                await apiFetch(`/diets/meals/${data.dbId}`, { method: 'DELETE' });
+            }
+        }
+
+        alert("Dieta guardada correctamente");
+        window.location.href = '/dashboard/diets';
+    } catch(e) {
+        console.error(e);
+        alert("Error al guardar. Revisa la consola.");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check2-circle"></i> Guardar Dieta';
+    }
+}
+
+// Iniciar al cargar
+window.addEventListener('DOMContentLoaded', initBuilder);
+</script>
+</body>
+</html>
