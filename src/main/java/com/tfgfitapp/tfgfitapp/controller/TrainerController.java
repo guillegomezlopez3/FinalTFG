@@ -5,7 +5,7 @@ import com.tfgfitapp.tfgfitapp.dto.TrainerResponse;
 import com.tfgfitapp.tfgfitapp.dto.TrainerUpdateRequest;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.TrainerService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -25,8 +25,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/trainers")
-@RequiredArgsConstructor
 public class TrainerController {
+
+    public TrainerController(TrainerService trainerService) {
+        this.trainerService = trainerService;
+    }
 
     private final TrainerService trainerService;
 

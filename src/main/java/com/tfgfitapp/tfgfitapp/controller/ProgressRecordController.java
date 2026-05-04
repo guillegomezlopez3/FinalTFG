@@ -5,7 +5,7 @@ import com.tfgfitapp.tfgfitapp.dto.ProgressRecordResponse;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.ProgressRecordService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,8 +26,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/progress")
-@RequiredArgsConstructor
 public class ProgressRecordController {
+
+    public ProgressRecordController(ProgressRecordService progressRecordService) {
+        this.progressRecordService = progressRecordService;
+    }
 
     private final ProgressRecordService progressRecordService;
 

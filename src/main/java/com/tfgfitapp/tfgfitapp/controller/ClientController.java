@@ -8,7 +8,7 @@ import com.tfgfitapp.tfgfitapp.dto.PageResponse;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.ClientService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Pageable;
@@ -30,8 +30,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/clients")
-@RequiredArgsConstructor
 public class ClientController {
+
+    public ClientController(ClientService clientService) {
+        this.clientService = clientService;
+    }
 
     private final ClientService clientService;
 

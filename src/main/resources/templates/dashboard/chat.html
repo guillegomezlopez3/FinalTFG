@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <div th:replace="~{fragments/head :: head('Chat | TFG FitApp')}"></div>
+    <th:block th:replace="~{fragments/head :: head(title='Chat | TFG FitApp')}"/>
     <style>
         .chat-container {
             display: flex;
@@ -170,7 +170,7 @@
 </head>
 <body>
 <div class="app-layout">
-    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <th:block th:replace="~{fragments/sidebar :: sidebar}"/>
 
     <main class="main-content">
         <header class="top-header">
@@ -200,11 +200,8 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "/login";
-        return;
-    }
+    requireAuth();
+    const token = getToken();
 
     const contactList = document.getElementById("contactList");
     const chatMain = document.getElementById("chatMain");
@@ -349,5 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 </script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
 </body>
 </html>

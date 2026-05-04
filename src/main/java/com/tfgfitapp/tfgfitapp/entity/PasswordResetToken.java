@@ -1,18 +1,21 @@
 package com.tfgfitapp.tfgfitapp.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "password_reset_tokens")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class PasswordResetToken {
+
+    public PasswordResetToken() {}
+
+    public PasswordResetToken(Long id, String token, User user, Instant expiryDate) {
+        this.id = id;
+        this.token = token;
+        this.user = user;
+        this.expiryDate = expiryDate;
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,4 +29,14 @@ public class PasswordResetToken {
 
     @Column(nullable = false)
     private Instant expiryDate;
+
+    // Manual Methods
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public Instant getExpiryDate() { return expiryDate; }
+    public void setExpiryDate(Instant expiryDate) { this.expiryDate = expiryDate; }
 }

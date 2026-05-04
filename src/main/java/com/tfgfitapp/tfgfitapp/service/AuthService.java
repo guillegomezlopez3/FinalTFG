@@ -11,7 +11,7 @@ import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
 import com.tfgfitapp.tfgfitapp.security.JwtService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,8 +28,18 @@ import org.springframework.transaction.annotation.Transactional;
  * - Al registrar un CLIENT se crea su entidad Client con trainer=null (se asignará después).
  */
 @Service
-@RequiredArgsConstructor
 public class AuthService {
+
+    public AuthService(UserRepository userRepository, TrainerRepository trainerRepository,
+                       ClientRepository clientRepository, PasswordEncoder passwordEncoder,
+                       JwtService jwtService, AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.trainerRepository = trainerRepository;
+        this.clientRepository = clientRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
@@ -55,39 +65,36 @@ public class AuthService {
         }
 
         // Crear y guardar el User base
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .active(true)
-                .build();
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(request.getRole());
+        user.setActive(true);
 
         userRepository.save(user);
 
         // Crear entidad de perfil según el rol
         if (request.getRole() == Role.TRAINER) {
-            Trainer trainer = Trainer.builder()
-                    .user(user)
-                    .build();
+            Trainer trainer = new Trainer();
+            trainer.setUser(user);
             trainerRepository.save(trainer);
         } else if (request.getRole() == Role.CLIENT) {
-            Client client = Client.builder()
-                    .user(user)
-                    .trainer(null) // Se asignará después por el admin o trainer
-                    .build();
+            Client client = new Client();
+            client.setUser(user);
+            client.setTrainer(null); // Se asignará después por el admin o trainer
             clientRepository.save(client);
         }
 
         String token = jwtService.generateToken(user);
 
-        return AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .build();
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setUserId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        return response;
     }
 
     /**
@@ -105,13 +112,13 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
 
-        return AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .build();
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setUserId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        return response;
     }
 }
 

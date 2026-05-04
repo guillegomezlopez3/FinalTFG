@@ -11,7 +11,7 @@ import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.ProgressRecordRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +28,14 @@ import java.util.stream.Collectors;
  * - ADMIN: acceso completo.
  */
 @Service
-@RequiredArgsConstructor
 public class ProgressRecordService {
+
+    public ProgressRecordService(ProgressRecordRepository progressRecordRepository,
+                                 ClientRepository clientRepository, TrainerRepository trainerRepository) {
+        this.progressRecordRepository = progressRecordRepository;
+        this.clientRepository = clientRepository;
+        this.trainerRepository = trainerRepository;
+    }
 
     private final ProgressRecordRepository progressRecordRepository;
     private final ClientRepository clientRepository;
@@ -43,18 +49,17 @@ public class ProgressRecordService {
         Client client = clientRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil de cliente no encontrado"));
 
-        ProgressRecord record = ProgressRecord.builder()
-                .client(client)
-                .recordDate(request.getRecordDate())
-                .weight(request.getWeight())
-                .bodyFat(request.getBodyFat())
-                .chest(request.getChest())
-                .waist(request.getWaist())
-                .hips(request.getHips())
-                .arms(request.getArms())
-                .legs(request.getLegs())
-                .notes(request.getNotes())
-                .build();
+        ProgressRecord record = new ProgressRecord();
+        record.setClient(client);
+        record.setRecordDate(request.getRecordDate());
+        record.setWeight(request.getWeight());
+        record.setBodyFat(request.getBodyFat());
+        record.setChest(request.getChest());
+        record.setWaist(request.getWaist());
+        record.setHips(request.getHips());
+        record.setArms(request.getArms());
+        record.setLegs(request.getLegs());
+        record.setNotes(request.getNotes());
 
         return toResponse(progressRecordRepository.save(record));
     }
@@ -157,21 +162,21 @@ public class ProgressRecordService {
     // ===== MAPPER =====
 
     public ProgressRecordResponse toResponse(ProgressRecord record) {
-        return ProgressRecordResponse.builder()
-                .id(record.getId())
-                .clientId(record.getClient().getId())
-                .clientName(record.getClient().getUser() != null ? record.getClient().getUser().getName() : null)
-                .recordDate(record.getRecordDate())
-                .weight(record.getWeight())
-                .bodyFat(record.getBodyFat())
-                .chest(record.getChest())
-                .waist(record.getWaist())
-                .hips(record.getHips())
-                .arms(record.getArms())
-                .legs(record.getLegs())
-                .notes(record.getNotes())
-                .createdAt(record.getCreatedAt())
-                .build();
+        ProgressRecordResponse response = new ProgressRecordResponse();
+        response.setId(record.getId());
+        response.setClientId(record.getClient().getId());
+        response.setClientName(record.getClient().getUser() != null ? record.getClient().getUser().getName() : null);
+        response.setRecordDate(record.getRecordDate());
+        response.setWeight(record.getWeight());
+        response.setBodyFat(record.getBodyFat());
+        response.setChest(record.getChest());
+        response.setWaist(record.getWaist());
+        response.setHips(record.getHips());
+        response.setArms(record.getArms());
+        response.setLegs(record.getLegs());
+        response.setNotes(record.getNotes());
+        response.setCreatedAt(record.getCreatedAt());
+        return response;
     }
 }
 

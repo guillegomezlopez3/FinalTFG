@@ -6,7 +6,7 @@ import com.tfgfitapp.tfgfitapp.dto.PageResponse;
 import com.tfgfitapp.tfgfitapp.dto.TrainerResponse;
 import com.tfgfitapp.tfgfitapp.service.AdminService;
 import com.tfgfitapp.tfgfitapp.service.TrainerService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -24,9 +24,13 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/admin")
-@RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+
+    public AdminController(AdminService adminService, TrainerService trainerService) {
+        this.adminService = adminService;
+        this.trainerService = trainerService;
+    }
 
     private final AdminService adminService;
     private final TrainerService trainerService;

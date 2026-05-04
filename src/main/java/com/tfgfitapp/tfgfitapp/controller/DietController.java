@@ -4,7 +4,7 @@ import com.tfgfitapp.tfgfitapp.dto.*;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.DietService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,8 +30,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/diets")
-@RequiredArgsConstructor
 public class DietController {
+
+    public DietController(DietService dietService) {
+        this.dietService = dietService;
+    }
 
     private final DietService dietService;
 

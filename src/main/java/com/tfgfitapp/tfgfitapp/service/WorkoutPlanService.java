@@ -5,7 +5,7 @@ import com.tfgfitapp.tfgfitapp.entity.*;
 import com.tfgfitapp.tfgfitapp.enumeration.Role;
 import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.*;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,8 +24,17 @@ import java.util.stream.Collectors;
  * - ADMIN: acceso completo.
  */
 @Service
-@RequiredArgsConstructor
 public class WorkoutPlanService {
+
+    public WorkoutPlanService(WorkoutPlanRepository workoutPlanRepository, WorkoutDayRepository workoutDayRepository,
+                              ExerciseRepository exerciseRepository, ClientRepository clientRepository,
+                              TrainerRepository trainerRepository) {
+        this.workoutPlanRepository = workoutPlanRepository;
+        this.workoutDayRepository = workoutDayRepository;
+        this.exerciseRepository = exerciseRepository;
+        this.clientRepository = clientRepository;
+        this.trainerRepository = trainerRepository;
+    }
 
     private final WorkoutPlanRepository workoutPlanRepository;
     private final WorkoutDayRepository workoutDayRepository;
@@ -44,16 +53,15 @@ public class WorkoutPlanService {
         Client client = getClientOrThrow(request.getClientId());
         ensureClientBelongsToTrainer(client, trainer);
 
-        WorkoutPlan plan = WorkoutPlan.builder()
-                .trainer(trainer)
-                .client(client)
-                .title(request.getTitle())
-                .objective(request.getObjective())
-                .notes(request.getNotes())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .active(request.getActive() != null ? request.getActive() : true)
-                .build();
+        WorkoutPlan plan = new WorkoutPlan();
+        plan.setTrainer(trainer);
+        plan.setClient(client);
+        plan.setTitle(request.getTitle());
+        plan.setObjective(request.getObjective());
+        plan.setNotes(request.getNotes());
+        plan.setStartDate(request.getStartDate());
+        plan.setEndDate(request.getEndDate());
+        plan.setActive(request.getActive() != null ? request.getActive() : true);
 
         return toResponse(workoutPlanRepository.save(plan));
     }
@@ -127,12 +135,11 @@ public class WorkoutPlanService {
         WorkoutPlan plan = workoutPlanRepository.findByIdAndTrainerId(planId, trainer.getId())
                 .orElseThrow(() -> new AccessDeniedException("No tienes acceso a este plan"));
 
-        WorkoutDay day = WorkoutDay.builder()
-                .workoutPlan(plan)
-                .dayOfWeek(request.getDayOfWeek())
-                .focus(request.getFocus())
-                .notes(request.getNotes())
-                .build();
+        WorkoutDay day = new WorkoutDay();
+        day.setWorkoutPlan(plan);
+        day.setDayOfWeek(request.getDayOfWeek());
+        day.setFocus(request.getFocus());
+        day.setNotes(request.getNotes());
 
         return toDayResponse(workoutDayRepository.save(day));
     }
@@ -184,15 +191,14 @@ public class WorkoutPlanService {
             throw new AccessDeniedException("No tienes acceso a este día");
         }
 
-        Exercise exercise = Exercise.builder()
-                .workoutDay(day)
-                .name(request.getName())
-                .sets(request.getSets())
-                .reps(request.getReps())
-                .restSeconds(request.getRestSeconds())
-                .durationMinutes(request.getDurationMinutes())
-                .notes(request.getNotes())
-                .build();
+        Exercise exercise = new Exercise();
+        exercise.setWorkoutDay(day);
+        exercise.setName(request.getName());
+        exercise.setSets(request.getSets());
+        exercise.setReps(request.getReps());
+        exercise.setRestSeconds(request.getRestSeconds());
+        exercise.setDurationMinutes(request.getDurationMinutes());
+        exercise.setNotes(request.getNotes());
 
         return toExerciseResponse(exerciseRepository.save(exercise));
     }
@@ -299,54 +305,54 @@ public class WorkoutPlanService {
     // ===== MAPPERS =====
 
     public WorkoutPlanResponse toResponse(WorkoutPlan plan) {
-        List<WorkoutDayResponse> days = plan.getWorkoutDays() != null
+        List<WorkoutDayResponse> daysList = plan.getWorkoutDays() != null
                 ? plan.getWorkoutDays().stream().map(this::toDayResponse).collect(Collectors.toList())
                 : List.of();
 
-        return WorkoutPlanResponse.builder()
-                .id(plan.getId())
-                .clientId(plan.getClient().getId())
-                .clientName(plan.getClient().getUser() != null ? plan.getClient().getUser().getName() : null)
-                .trainerId(plan.getTrainer().getId())
-                .trainerName(plan.getTrainer().getUser() != null ? plan.getTrainer().getUser().getName() : null)
-                .title(plan.getTitle())
-                .objective(plan.getObjective())
-                .notes(plan.getNotes())
-                .startDate(plan.getStartDate())
-                .endDate(plan.getEndDate())
-                .active(plan.getActive())
-                .createdAt(plan.getCreatedAt())
-                .updatedAt(plan.getUpdatedAt())
-                .workoutDays(days)
-                .build();
+        WorkoutPlanResponse response = new WorkoutPlanResponse();
+        response.setId(plan.getId());
+        response.setClientId(plan.getClient().getId());
+        response.setClientName(plan.getClient().getUser() != null ? plan.getClient().getUser().getName() : null);
+        response.setTrainerId(plan.getTrainer().getId());
+        response.setTrainerName(plan.getTrainer().getUser() != null ? plan.getTrainer().getUser().getName() : null);
+        response.setTitle(plan.getTitle());
+        response.setObjective(plan.getObjective());
+        response.setNotes(plan.getNotes());
+        response.setStartDate(plan.getStartDate());
+        response.setEndDate(plan.getEndDate());
+        response.setActive(plan.getActive());
+        response.setCreatedAt(plan.getCreatedAt());
+        response.setUpdatedAt(plan.getUpdatedAt());
+        response.setWorkoutDays(daysList);
+        return response;
     }
 
     public WorkoutDayResponse toDayResponse(WorkoutDay day) {
-        List<ExerciseResponse> exercises = day.getExercises() != null
+        List<ExerciseResponse> exercisesList = day.getExercises() != null
                 ? day.getExercises().stream().map(this::toExerciseResponse).collect(Collectors.toList())
                 : List.of();
 
-        return WorkoutDayResponse.builder()
-                .id(day.getId())
-                .workoutPlanId(day.getWorkoutPlan() != null ? day.getWorkoutPlan().getId() : null)
-                .dayOfWeek(day.getDayOfWeek())
-                .focus(day.getFocus())
-                .notes(day.getNotes())
-                .exercises(exercises)
-                .build();
+        WorkoutDayResponse response = new WorkoutDayResponse();
+        response.setId(day.getId());
+        response.setWorkoutPlanId(day.getWorkoutPlan() != null ? day.getWorkoutPlan().getId() : null);
+        response.setDayOfWeek(day.getDayOfWeek());
+        response.setFocus(day.getFocus());
+        response.setNotes(day.getNotes());
+        response.setExercises(exercisesList);
+        return response;
     }
 
     public ExerciseResponse toExerciseResponse(Exercise exercise) {
-        return ExerciseResponse.builder()
-                .id(exercise.getId())
-                .workoutDayId(exercise.getWorkoutDay() != null ? exercise.getWorkoutDay().getId() : null)
-                .name(exercise.getName())
-                .sets(exercise.getSets())
-                .reps(exercise.getReps())
-                .restSeconds(exercise.getRestSeconds())
-                .durationMinutes(exercise.getDurationMinutes())
-                .notes(exercise.getNotes())
-                .build();
+        ExerciseResponse response = new ExerciseResponse();
+        response.setId(exercise.getId());
+        response.setWorkoutDayId(exercise.getWorkoutDay() != null ? exercise.getWorkoutDay().getId() : null);
+        response.setName(exercise.getName());
+        response.setSets(exercise.getSets());
+        response.setReps(exercise.getReps());
+        response.setRestSeconds(exercise.getRestSeconds());
+        response.setDurationMinutes(exercise.getDurationMinutes());
+        response.setNotes(exercise.getNotes());
+        return response;
     }
 }
 

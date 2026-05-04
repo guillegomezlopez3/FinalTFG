@@ -97,20 +97,7 @@
     </div>
 </div>
 
-<!-- MODAL días y ejercicios -->
-<div class="modal fade" id="daysModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="days-modal-title"><i class="bi bi-calendar3 me-2" style="color:var(--orange)"></i>Días del plan</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="days-body">
-                <div class="text-center py-4"><div class="spinner-border text-secondary"></div></div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/js/app.js}"></script>
@@ -120,12 +107,11 @@ const user = getUser();
 const DAY_NAMES = { MONDAY:'Lunes', TUESDAY:'Martes', WEDNESDAY:'Miércoles',
     THURSDAY:'Jueves', FRIDAY:'Viernes', SATURDAY:'Sábado', SUNDAY:'Domingo' };
 
-let planModalBs, daysModalBs;
+let planModalBs;
 let myClients = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     planModalBs = new bootstrap.Modal(document.getElementById('planModal'));
-    daysModalBs = new bootstrap.Modal(document.getElementById('daysModal'));
 
     if (user && user.role === 'CLIENT') {
         document.getElementById('btn-new-plan').style.display = 'none';
@@ -221,7 +207,7 @@ function planCard(p) {
                 </div>
             </div>
             <div class="border-top px-3 py-2">
-                <button class="btn btn-sm btn-outline-orange w-100" onclick="openDays(${p.id}, '${(p.title||'').replace(/'/g,"\\'")}')">
+                <button class="btn btn-sm btn-outline-orange w-100" onclick="window.location.href='/dashboard/workout-builder?planId=${p.id}'">
                     <i class="bi bi-calendar3 me-1"></i> Ver días y ejercicios (${days.length})
                 </button>
             </div>
@@ -286,121 +272,7 @@ async function deletePlan(id) {
     loadPlans();
 }
 
-let currentPlanId = null;
-let currentPlanTitle = '';
 
-async function openDays(planId, title) {
-    currentPlanId = planId;
-    currentPlanTitle = title;
-    document.getElementById('days-modal-title').innerHTML =
-        `<i class="bi bi-calendar3 me-2" style="color:var(--orange)"></i>${title}`;
-    daysModalBs.show();
-    await loadDaysContent(planId);
-    try {
-        const res  = await apiFetch(`/workout-plans/${planId}`);
-        const plan = await res.json();
-        const days = plan.workoutDays || [];
-        if (days.length === 0) {
-            const addBtn = user.role !== 'CLIENT'
-                ? `<button class="btn-orange btn-sm" onclick="addDay(${planId})"><i class="bi bi-plus-lg"></i> Añadir día</button>` : '';
-            body.innerHTML = `<div class="empty-state"><i class="bi bi-calendar3"></i><p>No hay días añadidos</p></div>${addBtn ? '<div class="text-center mt-2">'+addBtn+'</div>' : ''}`;
-            return;
-        }
-        body.innerHTML = days.map(d => daySection(d, planId)).join('') +
-            (user.role !== 'CLIENT' ? `<div class="mt-3"><button class="btn-outline-orange btn-sm" onclick="addDay(${planId})"><i class="bi bi-plus-lg"></i> Añadir día</button></div>` : '');
-    } catch(e) {
-        body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar</p></div>`;
-    }
-}
-
-function daySection(d, planId) {
-    const exercises = d.exercises || [];
-    return `
-    <div class="card mb-3">
-        <div class="card-header-custom">
-            <div>
-                <span class="badge" style="background:rgba(255,87,34,.12);color:var(--orange);font-size:.8rem;">${DAY_NAMES[d.dayOfWeek]||d.dayOfWeek}</span>
-                <span class="ms-2 fw-600" style="font-weight:600;">${d.focus||''}</span>
-            </div>
-            ${user.role !== 'CLIENT' ? `
-            <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-outline-orange" onclick="addExercise(${d.id})"><i class="bi bi-plus-lg"></i> Ejercicio</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteDay(${d.id}, ${planId})"><i class="bi bi-trash"></i></button>
-            </div>` : ''}
-        </div>
-        ${exercises.length > 0 ? `
-        <div class="table-overflow">
-            <table class="table mb-0">
-                <thead><tr><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Descanso</th><th>Duración</th>${user.role!=='CLIENT'?'<th></th>':''}</tr></thead>
-                <tbody>
-                    ${exercises.map(ex => `
-                    <tr>
-                        <td class="fw-600" style="font-weight:600;">${ex.name}</td>
-                        <td>${ex.sets||'—'}</td>
-                        <td>${ex.reps||'—'}</td>
-                        <td>${ex.restSeconds ? ex.restSeconds+'s' : '—'}</td>
-                        <td>${ex.durationMinutes ? ex.durationMinutes+' min' : '—'}</td>
-                        ${user.role!=='CLIENT' ? `<td><button class="btn btn-sm btn-outline-danger" onclick="deleteExercise(${ex.id})"><i class="bi bi-trash"></i></button></td>` : ''}
-                    </tr>`).join('')}
-                </tbody>
-            </table>
-        </div>` : `<div class="card-body-p text-muted" style="font-size:.85rem;">Sin ejercicios añadidos</div>`}
-    </div>`;
-}
-
-async function loadDaysContent(planId) {
-    const body = document.getElementById('days-body');
-    body.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-secondary"></div></div>`;
-    try {
-        const res  = await apiFetch(`/workout-plans/${planId}`);
-        const plan = await res.json();
-        const days = plan.workoutDays || [];
-        if (days.length === 0) {
-            const addBtn = user.role !== 'CLIENT'
-                ? `<button class="btn-orange btn-sm" onclick="addDay(${planId})"><i class="bi bi-plus-lg"></i> Añadir día</button>` : '';
-            body.innerHTML = `<div class="empty-state"><i class="bi bi-calendar3"></i><p>No hay días añadidos</p></div>${addBtn ? '<div class="text-center mt-2">'+addBtn+'</div>' : ''}`;
-            return;
-        }
-        body.innerHTML = days.map(d => daySection(d, planId)).join('') +
-            (user.role !== 'CLIENT' ? `<div class="mt-3"><button class="btn-outline-orange btn-sm" onclick="addDay(${planId})"><i class="bi bi-plus-lg"></i> Añadir día</button></div>` : '');
-    } catch(e) {
-        body.innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar</p></div>`;
-    }
-}
-
-async function addDay(planId) {
-    const dow = prompt('Día de la semana (MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY):');
-    if (!dow) return;
-    const focus = prompt('Enfoque del día (ej: Tren superior):') || '';
-    await apiFetch(`/workout-plans/${planId}/days`, {
-        method:'POST', body: JSON.stringify({ dayOfWeek: dow.toUpperCase(), focus })
-    });
-    await loadDaysContent(planId);
-}
-
-async function deleteDay(dayId, planId) {
-    if (!confirm('¿Eliminar este día?')) return;
-    await apiFetch(`/workout-plans/days/${dayId}`, { method:'DELETE' });
-    await loadDaysContent(planId);
-}
-
-async function addExercise(dayId) {
-    const name = prompt('Nombre del ejercicio:');
-    if (!name) return;
-    const sets = parseInt(prompt('Series (ej: 4):')) || null;
-    const reps = prompt('Repeticiones (ej: 8-12 o AMRAP):') || null;
-    const rest = parseInt(prompt('Descanso en segundos (ej: 90):')) || null;
-    await apiFetch(`/workout-plans/days/${dayId}/exercises`, {
-        method:'POST', body: JSON.stringify({ name, sets, reps, restSeconds: rest })
-    });
-    await loadDaysContent(currentPlanId);
-}
-
-async function deleteExercise(exId) {
-    if (!confirm('¿Eliminar este ejercicio?')) return;
-    await apiFetch(`/workout-plans/exercises/${exId}`, { method:'DELETE' });
-    await loadDaysContent(currentPlanId);
-}
 </script>
 </body>
 </html>

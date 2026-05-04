@@ -5,7 +5,7 @@ import com.tfgfitapp.tfgfitapp.dto.LoginRequest;
 import com.tfgfitapp.tfgfitapp.dto.RegisterRequest;
 import com.tfgfitapp.tfgfitapp.service.AuthService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     private final AuthService authService;
 

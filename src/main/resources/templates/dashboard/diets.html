@@ -94,63 +94,7 @@
     </div>
 </div>
 
-<!-- MODAL: comidas de una dieta -->
-<div class="modal fade" id="mealsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="meals-modal-title"><i class="bi bi-list-ul me-2" style="color:var(--orange)"></i>Comidas</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="meals-alert"></div>
-                <input type="hidden" id="current-diet-id"/>
 
-                <!-- Nueva comida -->
-                <div class="card mb-3" style="background:#fafbfc;">
-                    <div class="card-body-p py-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-2">
-                                <label class="form-label mb-1">Tipo</label>
-                                <input type="text" id="meal-type" class="form-control form-control-sm" placeholder="Desayuno"/>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label mb-1">Hora</label>
-                                <input type="time" id="meal-time" class="form-control form-control-sm"/>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label mb-1">Alimentos</label>
-                                <input type="text" id="meal-foods" class="form-control form-control-sm" placeholder="Avena, leche, plátano..."/>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label mb-1">Kcal</label>
-                                <input type="number" id="meal-kcal" class="form-control form-control-sm" placeholder="350"/>
-                            </div>
-                            <div class="col-auto">
-                                <button class="btn-orange btn-sm" onclick="addMeal()">
-                                    <i class="bi bi-plus-lg"></i> Añadir
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-overflow">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Tipo</th><th>Hora</th><th>Alimentos</th><th>Kcal</th><th>Notas</th><th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="meals-body">
-                            <tr><td colspan="6"><div class="text-center py-3 text-muted">Sin comidas registradas</div></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/js/app.js}"></script>
@@ -158,12 +102,11 @@
 requireAuth();
 const user = getUser();
 
-let dietModalBs, mealsModalBs;
+let dietModalBs;
 let myClients = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     dietModalBs  = new bootstrap.Modal(document.getElementById('dietModal'));
-    mealsModalBs = new bootstrap.Modal(document.getElementById('mealsModal'));
 
     /* Ocultar botón nueva dieta para CLIENT */
     if (user && user.role === 'CLIENT') {
@@ -245,7 +188,7 @@ function dietCard(d) {
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" style="font-size:.85rem;">
-                            <li><a class="dropdown-item" href="#" onclick="openMeals(${d.id}, '${escStr(d.title)}')"><i class="bi bi-list-ul me-2"></i>Ver comidas</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="window.location.href='/dashboard/diet-builder?dietId=${d.id}'"><i class="bi bi-list-ul me-2"></i>Ver comidas</a></li>
                             ${user.role !== 'CLIENT' ? `
                             <li><a class="dropdown-item" href="#" onclick="openEditDiet(${JSON.stringify(d).replace(/"/g,'&quot;')})"><i class="bi bi-pencil me-2"></i>Editar</a></li>
                             <li><hr class="dropdown-divider"></li>
@@ -262,7 +205,7 @@ function dietCard(d) {
                 </div>
             </div>
             <div class="border-top px-3 py-2">
-                <button class="btn btn-sm btn-outline-orange w-100" onclick="openMeals(${d.id}, '${escStr(d.title)}')">
+                <button class="btn btn-sm btn-outline-orange w-100" onclick="window.location.href='/dashboard/diet-builder?dietId=${d.id}'">
                     <i class="bi bi-list-ul me-1"></i> Ver comidas (${(d.meals||[]).length})
                 </button>
             </div>
@@ -326,71 +269,7 @@ async function deleteDiet(id) {
     loadDiets();
 }
 
-async function openMeals(dietId, title) {
-    document.getElementById('current-diet-id').value = dietId;
-    document.getElementById('meals-modal-title').innerHTML =
-        `<i class="bi bi-list-ul me-2" style="color:var(--orange)"></i>${title}`;
-    document.getElementById('meals-alert').innerHTML = '';
-    mealsModalBs.show();
-    await loadMeals(dietId);
-}
 
-async function loadMeals(dietId) {
-    const body = document.getElementById('meals-body');
-    try {
-        const res  = await apiFetch(`/diets/${dietId}`);
-        const data = await res.json();
-        const meals = data.meals || [];
-        if (meals.length === 0) {
-            body.innerHTML = `<tr><td colspan="6"><div class="text-center py-3 text-muted">Sin comidas registradas</div></td></tr>`;
-            return;
-        }
-        body.innerHTML = meals.map(m => `
-        <tr>
-            <td><span class="fw-600" style="font-weight:600;">${m.mealType||'—'}</span></td>
-            <td>${m.mealTime||'—'}</td>
-            <td>${m.foods||'—'}</td>
-            <td>${m.calories ? m.calories + ' kcal' : '—'}</td>
-            <td>${m.notes||'—'}</td>
-            <td>
-                ${user.role !== 'CLIENT' ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteMeal(${m.id})"><i class="bi bi-trash"></i></button>` : ''}
-            </td>
-        </tr>`).join('');
-    } catch(e) {
-        body.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Error al cargar</td></tr>`;
-    }
-}
-
-async function addMeal() {
-    const dietId = document.getElementById('current-diet-id').value;
-    const body = {
-        mealType: document.getElementById('meal-type').value,
-        mealTime: document.getElementById('meal-time').value || null,
-        foods:    document.getElementById('meal-foods').value,
-        calories: parseInt(document.getElementById('meal-kcal').value) || null
-    };
-    if (!body.mealType || !body.foods) {
-        showAlert(document.getElementById('meals-alert'), 'El tipo y los alimentos son obligatorios');
-        return;
-    }
-    try {
-        const res = await apiFetch(`/diets/${dietId}/meals`, { method:'POST', body: JSON.stringify(body) });
-        if (!res.ok) throw new Error();
-        document.getElementById('meal-type').value  = '';
-        document.getElementById('meal-time').value  = '';
-        document.getElementById('meal-foods').value = '';
-        document.getElementById('meal-kcal').value  = '';
-        await loadMeals(dietId);
-    } catch(e) {
-        showAlert(document.getElementById('meals-alert'), 'Error al añadir la comida');
-    }
-}
-
-async function deleteMeal(mealId) {
-    if (!confirm('¿Eliminar esta comida?')) return;
-    await apiFetch(`/diets/meals/${mealId}`, { method:'DELETE' });
-    await loadMeals(document.getElementById('current-diet-id').value);
-}
 </script>
 </body>
 </html>

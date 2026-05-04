@@ -2,7 +2,6 @@ package com.tfgfitapp.tfgfitapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
 
 /**
  * Comida individual dentro de una dieta.
@@ -12,12 +11,19 @@ import lombok.*;
  */
 @Entity
 @Table(name = "diet_meals")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class DietMeal {
+
+    public DietMeal() {}
+
+    public DietMeal(Long id, Diet diet, String mealType, String mealTime, String foods, Integer calories, String notes) {
+        this.id = id;
+        this.diet = diet;
+        this.mealType = mealType;
+        this.mealTime = mealTime;
+        this.foods = foods;
+        this.calories = calories;
+        this.notes = notes;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,5 +47,20 @@ public class DietMeal {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Diet getDiet() { return diet; }
+    public void setDiet(Diet diet) { this.diet = diet; }
+    public String getMealType() { return mealType; }
+    public void setMealType(String mealType) { this.mealType = mealType; }
+    public String getMealTime() { return mealTime; }
+    public void setMealTime(String mealTime) { this.mealTime = mealTime; }
+    public String getFoods() { return foods; }
+    public void setFoods(String foods) { this.foods = foods; }
+    public Integer getCalories() { return calories; }
+    public void setCalories(Integer calories) { this.calories = calories; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }
 

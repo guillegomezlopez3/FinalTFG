@@ -2,7 +2,7 @@ package com.tfgfitapp.tfgfitapp.config;
 
 import com.tfgfitapp.tfgfitapp.security.CustomUserDetailsService;
 import com.tfgfitapp.tfgfitapp.security.JwtAuthenticationFilter;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,8 +36,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+                          CustomUserDetailsService userDetailsService,
+                          CorsConfigurationSource corsConfigurationSource) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;

@@ -8,7 +8,7 @@ import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.DietMealRepository;
 import com.tfgfitapp.tfgfitapp.repository.DietRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +25,15 @@ import java.util.stream.Collectors;
  * - ADMIN: acceso completo.
  */
 @Service
-@RequiredArgsConstructor
 public class DietService {
+
+    public DietService(DietRepository dietRepository, DietMealRepository dietMealRepository,
+                       ClientRepository clientRepository, TrainerRepository trainerRepository) {
+        this.dietRepository = dietRepository;
+        this.dietMealRepository = dietMealRepository;
+        this.clientRepository = clientRepository;
+        this.trainerRepository = trainerRepository;
+    }
 
     private final DietRepository dietRepository;
     private final DietMealRepository dietMealRepository;
@@ -44,15 +51,14 @@ public class DietService {
         Client client = getClientOrThrow(request.getClientId());
         ensureClientBelongsToTrainer(client, trainer);
 
-        Diet diet = Diet.builder()
-                .trainer(trainer)
-                .client(client)
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .active(request.getActive() != null ? request.getActive() : true)
-                .build();
+        Diet diet = new Diet();
+        diet.setTrainer(trainer);
+        diet.setClient(client);
+        diet.setTitle(request.getTitle());
+        diet.setDescription(request.getDescription());
+        diet.setStartDate(request.getStartDate());
+        diet.setEndDate(request.getEndDate());
+        diet.setActive(request.getActive() != null ? request.getActive() : true);
 
         return toResponse(dietRepository.save(diet));
     }
@@ -120,14 +126,13 @@ public class DietService {
         Diet diet = dietRepository.findByIdAndTrainerId(dietId, trainer.getId())
                 .orElseThrow(() -> new AccessDeniedException("No tienes acceso a esta dieta"));
 
-        DietMeal meal = DietMeal.builder()
-                .diet(diet)
-                .mealType(request.getMealType())
-                .mealTime(request.getMealTime())
-                .foods(request.getFoods())
-                .calories(request.getCalories())
-                .notes(request.getNotes())
-                .build();
+        DietMeal meal = new DietMeal();
+        meal.setDiet(diet);
+        meal.setMealType(request.getMealType());
+        meal.setMealTime(request.getMealTime());
+        meal.setFoods(request.getFoods());
+        meal.setCalories(request.getCalories());
+        meal.setNotes(request.getNotes());
 
         return toMealResponse(dietMealRepository.save(meal));
     }
@@ -229,37 +234,37 @@ public class DietService {
     // ===== MAPPERS =====
 
     public DietResponse toResponse(Diet diet) {
-        List<DietMealResponse> meals = diet.getMeals() != null
+        List<DietMealResponse> mealsList = diet.getMeals() != null
                 ? diet.getMeals().stream().map(this::toMealResponse).collect(Collectors.toList())
                 : List.of();
 
-        return DietResponse.builder()
-                .id(diet.getId())
-                .clientId(diet.getClient().getId())
-                .clientName(diet.getClient().getUser() != null ? diet.getClient().getUser().getName() : null)
-                .trainerId(diet.getTrainer().getId())
-                .trainerName(diet.getTrainer().getUser() != null ? diet.getTrainer().getUser().getName() : null)
-                .title(diet.getTitle())
-                .description(diet.getDescription())
-                .startDate(diet.getStartDate())
-                .endDate(diet.getEndDate())
-                .active(diet.getActive())
-                .createdAt(diet.getCreatedAt())
-                .updatedAt(diet.getUpdatedAt())
-                .meals(meals)
-                .build();
+        DietResponse response = new DietResponse();
+        response.setId(diet.getId());
+        response.setClientId(diet.getClient().getId());
+        response.setClientName(diet.getClient().getUser() != null ? diet.getClient().getUser().getName() : null);
+        response.setTrainerId(diet.getTrainer().getId());
+        response.setTrainerName(diet.getTrainer().getUser() != null ? diet.getTrainer().getUser().getName() : null);
+        response.setTitle(diet.getTitle());
+        response.setDescription(diet.getDescription());
+        response.setStartDate(diet.getStartDate());
+        response.setEndDate(diet.getEndDate());
+        response.setActive(diet.getActive());
+        response.setCreatedAt(diet.getCreatedAt());
+        response.setUpdatedAt(diet.getUpdatedAt());
+        response.setMeals(mealsList);
+        return response;
     }
 
     public DietMealResponse toMealResponse(DietMeal meal) {
-        return DietMealResponse.builder()
-                .id(meal.getId())
-                .dietId(meal.getDiet() != null ? meal.getDiet().getId() : null)
-                .mealType(meal.getMealType())
-                .mealTime(meal.getMealTime())
-                .foods(meal.getFoods())
-                .calories(meal.getCalories())
-                .notes(meal.getNotes())
-                .build();
+        DietMealResponse response = new DietMealResponse();
+        response.setId(meal.getId());
+        response.setDietId(meal.getDiet() != null ? meal.getDiet().getId() : null);
+        response.setMealType(meal.getMealType());
+        response.setMealTime(meal.getMealTime());
+        response.setFoods(meal.getFoods());
+        response.setCalories(meal.getCalories());
+        response.setNotes(meal.getNotes());
+        return response;
     }
 }
 

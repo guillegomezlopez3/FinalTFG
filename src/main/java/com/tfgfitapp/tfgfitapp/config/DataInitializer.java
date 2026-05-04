@@ -2,8 +2,9 @@ package com.tfgfitapp.tfgfitapp.config;
 
 import com.tfgfitapp.tfgfitapp.enumeration.Role;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -19,11 +20,14 @@ import org.springframework.stereotype.Component;
  * Solo crearía un admin automáticamente si la base de datos está completamente vacía
  * de usuarios ADMIN.
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class DataInitializer implements ApplicationRunner {
 
+    public DataInitializer(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
     private final UserRepository userRepository;
 
     @Override

@@ -1,7 +1,6 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,8 +9,9 @@ import java.time.LocalDate;
  * DTO para crear o actualizar un registro de progreso.
  * Todos los campos de medidas son opcionales; solo la fecha es obligatoria.
  */
-@Data
 public class ProgressRecordRequest {
+
+    public ProgressRecordRequest() {}
 
     @NotNull(message = "La fecha del registro es obligatoria")
     private LocalDate recordDate;
@@ -24,5 +24,24 @@ public class ProgressRecordRequest {
     private BigDecimal arms;
     private BigDecimal legs;
     private String notes;
+
+    public LocalDate getRecordDate() { return recordDate; }
+    public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
+    public BigDecimal getWeight() { return weight; }
+    public void setWeight(BigDecimal weight) { this.weight = weight; }
+    public BigDecimal getBodyFat() { return bodyFat; }
+    public void setBodyFat(BigDecimal bodyFat) { this.bodyFat = bodyFat; }
+    public BigDecimal getChest() { return chest; }
+    public void setChest(BigDecimal chest) { this.chest = chest; }
+    public BigDecimal getWaist() { return waist; }
+    public void setWaist(BigDecimal waist) { this.waist = waist; }
+    public BigDecimal getHips() { return hips; }
+    public void setHips(BigDecimal hips) { this.hips = hips; }
+    public BigDecimal getArms() { return arms; }
+    public void setArms(BigDecimal arms) { this.arms = arms; }
+    public BigDecimal getLegs() { return legs; }
+    public void setLegs(BigDecimal legs) { this.legs = legs; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }
 

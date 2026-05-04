@@ -1,7 +1,7 @@
 package com.tfgfitapp.tfgfitapp.security;
 
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
  * por lo que no hace falta crear un wrapper adicional.
  */
 @Service
-@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     private final UserRepository userRepository;
 

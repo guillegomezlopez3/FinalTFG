@@ -4,7 +4,7 @@ import com.tfgfitapp.tfgfitapp.entity.PasswordResetToken;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.repository.PasswordResetTokenRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +14,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class PasswordResetService {
+
+    public PasswordResetService(PasswordResetTokenRepository tokenRepository,
+                                UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.tokenRepository = tokenRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     private final PasswordResetTokenRepository tokenRepository;
     private final UserRepository userRepository;

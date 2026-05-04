@@ -3,7 +3,7 @@ package com.tfgfitapp.tfgfitapp.controller;
 import com.tfgfitapp.tfgfitapp.dto.UserProfileResponse;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.UserService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +20,11 @@ import com.tfgfitapp.tfgfitapp.dto.ChangePasswordRequest;
  */
 @RestController
 @RequestMapping("/api")
-@RequiredArgsConstructor
 public class UserController {
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
     private final UserService userService;
 

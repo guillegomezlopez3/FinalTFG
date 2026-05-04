@@ -5,7 +5,7 @@ import com.tfgfitapp.tfgfitapp.dto.SendMessageRequest;
 import com.tfgfitapp.tfgfitapp.dto.UserProfileResponse;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.MessageService;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequiredArgsConstructor
 public class ChatController {
+
+    public ChatController(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     private final MessageService messageService;
 

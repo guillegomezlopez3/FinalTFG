@@ -19,10 +19,12 @@ import org.springframework.web.bind.annotation.GetMapping;
  *   GET /dashboard   → panel principal tras login (dashboard.html)
  *   GET /dashboard/clients   → listado de clientes (clients.html)
  *   GET /dashboard/diets     → listado de dietas (diets.html)
- *   GET /dashboard/workouts  → planes de entrenamiento (workouts.html)
- *   GET /dashboard/progress  → registros de progreso (progress.html)
- *   GET /dashboard/admin     → panel de administración (admin.html)
- *   GET /dashboard/profile   → perfil del usuario (profile.html)
+ *   GET /dashboard/workouts        → planes de entrenamiento (workouts.html)
+ *   GET /dashboard/workout-builder → constructor interactivo de planes (workout-builder.html)
+ *   GET /dashboard/diet-builder    → constructor interactivo de dietas (diet-builder.html)
+ *   GET /dashboard/progress        → registros de progreso (progress.html)
+ *   GET /dashboard/admin           → panel de administración (admin.html)
+ *   GET /dashboard/profile         → perfil del usuario (profile.html)
  */
 @Controller
 public class WebController {
@@ -75,6 +77,16 @@ public class WebController {
     @GetMapping("/dashboard/profile")
     public String profile() {
         return "dashboard/profile";
+    }
+
+    @GetMapping("/dashboard/workout-builder")
+    public String workoutBuilder() {
+        return "dashboard/workout-builder";
+    }
+
+    @GetMapping("/dashboard/diet-builder")
+    public String dietBuilder() {
+        return "dashboard/diet-builder";
     }
 }
 

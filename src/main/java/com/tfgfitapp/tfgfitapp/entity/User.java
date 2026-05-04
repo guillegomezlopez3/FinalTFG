@@ -3,7 +3,6 @@ package com.tfgfitapp.tfgfitapp.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tfgfitapp.tfgfitapp.enumeration.Role;
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,12 +20,20 @@ import java.util.List;
  */
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User implements UserDetails {
+
+    public User() {}
+
+    public User(Long id, String name, String email, String password, Role role, Boolean active, String avatar, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.active = active;
+        this.avatar = avatar;
+        this.createdAt = createdAt;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,8 +53,10 @@ public class User implements UserDetails {
     private Role role;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean active = true;
+
+    @Column(length = 255)
+    private String avatar;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,6 +75,23 @@ public class User implements UserDetails {
         this.createdAt = LocalDateTime.now();
     }
 
+    // Manual Getters/Setters for compatibility when Lombok fails
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPassword(String password) { this.password = password; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -83,7 +109,12 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + (role != null ? role.name() : "USER")));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
     }
 
     @Override

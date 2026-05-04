@@ -1,5 +1,6 @@
 package com.tfgfitapp.tfgfitapp.service;
 
+import com.tfgfitapp.tfgfitapp.dto.ChangePasswordRequest;
 import com.tfgfitapp.tfgfitapp.dto.UserProfileResponse;
 import com.tfgfitapp.tfgfitapp.entity.Trainer;
 import com.tfgfitapp.tfgfitapp.entity.User;
@@ -7,8 +8,6 @@ import com.tfgfitapp.tfgfitapp.enumeration.Role;
 import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
-import com.tfgfitapp.tfgfitapp.dto.ChangePasswordRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
  * Usado por el endpoint GET /api/me.
  */
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final TrainerRepository trainerRepository;
@@ -26,39 +24,48 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    public UserService(TrainerRepository trainerRepository, ClientRepository clientRepository,
+                       UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.trainerRepository = trainerRepository;
+        this.clientRepository = clientRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     /**
      * Devuelve el perfil completo del usuario autenticado,
      * incluyendo datos de su perfil Trainer o Client si aplica.
      */
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(User currentUser) {
-        UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder()
-                .id(currentUser.getId())
-                .name(currentUser.getName())
-                .email(currentUser.getEmail())
-                .role(currentUser.getRole())
-                .active(currentUser.getActive())
-                .createdAt(currentUser.getCreatedAt());
+        UserProfileResponse response = new UserProfileResponse();
+        response.setId(currentUser.getId());
+        response.setName(currentUser.getName());
+        response.setEmail(currentUser.getEmail());
+        response.setRole(currentUser.getRole());
+        response.setActive(currentUser.getActive());
+        response.setCreatedAt(currentUser.getCreatedAt());
+        response.setAvatar(currentUser.getAvatar());
 
         if (currentUser.getRole() == Role.TRAINER) {
             trainerRepository.findByUserId(currentUser.getId()).ifPresent(trainer -> {
-                builder.trainerId(trainer.getId())
-                        .phone(trainer.getPhone())
-                        .specialty(trainer.getSpecialty())
-                        .description(trainer.getDescription());
+                response.setTrainerId(trainer.getId());
+                response.setPhone(trainer.getPhone());
+                response.setSpecialty(trainer.getSpecialty());
+                response.setDescription(trainer.getDescription());
             });
         } else if (currentUser.getRole() == Role.CLIENT) {
             clientRepository.findByUserId(currentUser.getId()).ifPresent(client -> {
-                builder.clientId(client.getId());
+                response.setClientId(client.getId());
                 if (client.getTrainer() != null) {
                     Trainer t = client.getTrainer();
-                    builder.assignedTrainerId(t.getId())
-                            .assignedTrainerName(t.getUser() != null ? t.getUser().getName() : null);
+                    response.setAssignedTrainerId(t.getId());
+                    response.setAssignedTrainerName(t.getUser() != null ? t.getUser().getName() : null);
                 }
             });
         }
 
-        return builder.build();
+        return response;
     }
 
     /**
@@ -73,5 +80,3 @@ public class UserService {
         userRepository.save(currentUser);
     }
 }
-
-

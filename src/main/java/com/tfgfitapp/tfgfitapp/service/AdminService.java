@@ -6,7 +6,6 @@ import com.tfgfitapp.tfgfitapp.dto.PageResponse;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
  * Proporciona estadisticas globales, listados paginados y gestion de usuarios.
  */
 @Service
-@RequiredArgsConstructor
 public class AdminService {
 
     private final UserRepository userRepository;
@@ -27,6 +25,20 @@ public class AdminService {
     private final ProgressRecordRepository progressRecordRepository;
     private final ClientService clientService;
 
+    public AdminService(UserRepository userRepository, TrainerRepository trainerRepository,
+                        ClientRepository clientRepository, DietRepository dietRepository,
+                        WorkoutPlanRepository workoutPlanRepository,
+                        ProgressRecordRepository progressRecordRepository,
+                        ClientService clientService) {
+        this.userRepository = userRepository;
+        this.trainerRepository = trainerRepository;
+        this.clientRepository = clientRepository;
+        this.dietRepository = dietRepository;
+        this.workoutPlanRepository = workoutPlanRepository;
+        this.progressRecordRepository = progressRecordRepository;
+        this.clientService = clientService;
+    }
+
     /**
      * Devuelve estadisticas globales del sistema.
      */
@@ -35,18 +47,18 @@ public class AdminService {
         long totalClients = clientRepository.count();
         long activeClients = clientRepository.countByActive(true);
 
-        return AdminStatsResponse.builder()
-                .totalUsers(userRepository.count())
-                .totalTrainers(trainerRepository.count())
-                .totalClients(totalClients)
-                .activeClients(activeClients)
-                .inactiveClients(totalClients - activeClients)
-                .totalDiets(dietRepository.count())
-                .activeDiets(dietRepository.countByActive(true))
-                .totalWorkoutPlans(workoutPlanRepository.count())
-                .activeWorkoutPlans(workoutPlanRepository.countByActive(true))
-                .totalProgressRecords(progressRecordRepository.count())
-                .build();
+        AdminStatsResponse stats = new AdminStatsResponse();
+        stats.setTotalUsers(userRepository.count());
+        stats.setTotalTrainers(trainerRepository.count());
+        stats.setTotalClients(totalClients);
+        stats.setActiveClients(activeClients);
+        stats.setInactiveClients(totalClients - activeClients);
+        stats.setTotalDiets(dietRepository.count());
+        stats.setActiveDiets(dietRepository.countByActive(true));
+        stats.setTotalWorkoutPlans(workoutPlanRepository.count());
+        stats.setActiveWorkoutPlans(workoutPlanRepository.countByActive(true));
+        stats.setTotalProgressRecords(progressRecordRepository.count());
+        return stats;
     }
 
     /**
@@ -66,7 +78,7 @@ public class AdminService {
     public void toggleUserActive(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + userId));
-        
+
         boolean newStatus = !user.getActive();
         user.setActive(newStatus);
         userRepository.save(user);

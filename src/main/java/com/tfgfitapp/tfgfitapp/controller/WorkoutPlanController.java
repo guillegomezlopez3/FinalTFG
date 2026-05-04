@@ -4,7 +4,7 @@ import com.tfgfitapp.tfgfitapp.dto.*;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.service.WorkoutPlanService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/workout-plans")
-@RequiredArgsConstructor
 public class WorkoutPlanController {
+
+    public WorkoutPlanController(WorkoutPlanService workoutPlanService) {
+        this.workoutPlanService = workoutPlanService;
+    }
 
     private final WorkoutPlanService workoutPlanService;
 

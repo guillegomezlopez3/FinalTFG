@@ -10,7 +10,7 @@ import com.tfgfitapp.tfgfitapp.repository.MessageRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
 import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +20,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class MessageService {
+
+    public MessageService(MessageRepository messageRepository, UserRepository userRepository,
+                          ClientRepository clientRepository, TrainerRepository trainerRepository) {
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.clientRepository = clientRepository;
+        this.trainerRepository = trainerRepository;
+    }
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
@@ -30,12 +37,12 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public List<UserProfileResponse> getAllowedContacts(User currentUser) {
-        List<User> contacts = new ArrayList<>();
+        final List<User> contacts = new ArrayList<>();
 
         if (currentUser.getRole() == Role.ADMIN) {
-            contacts = userRepository.findAll().stream()
+            contacts.addAll(userRepository.findAll().stream()
                     .filter(u -> !u.getId().equals(currentUser.getId()))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         } else if (currentUser.getRole() == Role.TRAINER) {
             // Add admins
             contacts.addAll(userRepository.findAll().stream()
@@ -43,7 +50,7 @@ public class MessageService {
                     .collect(Collectors.toList()));
             // Add clients of this trainer
             trainerRepository.findByUserId(currentUser.getId()).ifPresent(trainer -> {
-                clientRepository.findByTrainerId(trainer.getId()).forEach(client -> {
+                clientRepository.findAllByTrainerId(trainer.getId()).forEach(client -> {
                     contacts.add(client.getUser());
                 });
             });
@@ -60,6 +67,7 @@ public class MessageService {
             });
         }
 
+
         return contacts.stream()
                 .filter(User::getActive)
                 .map(this::mapToProfileResponse)
@@ -67,13 +75,13 @@ public class MessageService {
     }
 
     private UserProfileResponse mapToProfileResponse(User user) {
-        return UserProfileResponse.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .avatar(user.getAvatar())
-                .build();
+        UserProfileResponse response = new UserProfileResponse();
+        response.setId(user.getId());
+        response.setName(user.getName());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+        response.setAvatar(user.getAvatar());
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -94,12 +102,11 @@ public class MessageService {
 
         validateCommunication(currentUser, receiver);
 
-        Message message = Message.builder()
-                .sender(currentUser)
-                .receiver(receiver)
-                .content(request.getContent())
-                .timestamp(LocalDateTime.now())
-                .build();
+        Message message = new Message();
+        message.setSender(currentUser);
+        message.setReceiver(receiver);
+        message.setContent(request.getContent());
+        message.setTimestamp(LocalDateTime.now());
 
         Message saved = messageRepository.save(message);
         return mapToDto(saved);
@@ -134,14 +141,14 @@ public class MessageService {
     }
 
     private MessageDto mapToDto(Message message) {
-        return MessageDto.builder()
-                .id(message.getId())
-                .senderId(message.getSender().getId())
-                .senderName(message.getSender().getName())
-                .receiverId(message.getReceiver().getId())
-                .receiverName(message.getReceiver().getName())
-                .content(message.getContent())
-                .timestamp(message.getTimestamp())
-                .build();
+        MessageDto dto = new MessageDto();
+        dto.setId(message.getId());
+        dto.setSenderId(message.getSender().getId());
+        dto.setSenderName(message.getSender().getName());
+        dto.setReceiverId(message.getReceiver().getId());
+        dto.setReceiverName(message.getReceiver().getName());
+        dto.setContent(message.getContent());
+        dto.setTimestamp(message.getTimestamp());
+        return dto;
     }
 }

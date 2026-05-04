@@ -2,7 +2,7 @@ package com.tfgfitapp.tfgfitapp.controller;
 
 import com.tfgfitapp.tfgfitapp.entity.PredefinedExercise;
 import com.tfgfitapp.tfgfitapp.repository.PredefinedExerciseRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,8 +14,11 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/predefined-exercises")
-@RequiredArgsConstructor
 public class PredefinedExerciseController {
+
+    public PredefinedExerciseController(PredefinedExerciseRepository repository) {
+        this.repository = repository;
+    }
 
     private final PredefinedExerciseRepository repository;
 

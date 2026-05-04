@@ -12,7 +12,7 @@ import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,8 +32,15 @@ import java.util.stream.Collectors;
  * - CLIENT: solo puede ver/editar su propio perfil.
  */
 @Service
-@RequiredArgsConstructor
 public class ClientService {
+
+    public ClientService(ClientRepository clientRepository, TrainerRepository trainerRepository,
+                         UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.clientRepository = clientRepository;
+        this.trainerRepository = trainerRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     private final ClientRepository clientRepository;
     private final TrainerRepository trainerRepository;
@@ -78,30 +85,28 @@ public class ClientService {
             throw new IllegalArgumentException("Ya existe un usuario registrado con el correo: " + request.getEmail());
         }
 
-        User newUser = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.CLIENT)
-                .active(true)
-                .build();
+        User newUser = new User();
+        newUser.setName(request.getName());
+        newUser.setEmail(request.getEmail());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setRole(Role.CLIENT);
+        newUser.setActive(true);
         
         userRepository.save(newUser);
 
-        Client newClient = Client.builder()
-                .user(newUser)
-                .trainer(trainer)
-                .age(request.getAge())
-                .gender(request.getGender())
-                .height(request.getHeight())
-                .weight(request.getWeight())
-                .goal(request.getGoal())
-                .level(request.getLevel() != null ? request.getLevel() : com.tfgfitapp.tfgfitapp.enumeration.ClientLevel.BEGINNER)
-                .injuries(request.getInjuries())
-                .allergies(request.getAllergies())
-                .notes(request.getNotes())
-                .active(true)
-                .build();
+        Client newClient = new Client();
+        newClient.setUser(newUser);
+        newClient.setTrainer(trainer);
+        newClient.setAge(request.getAge());
+        newClient.setGender(request.getGender());
+        newClient.setHeight(request.getHeight());
+        newClient.setWeight(request.getWeight());
+        newClient.setGoal(request.getGoal());
+        newClient.setLevel(request.getLevel() != null ? request.getLevel() : com.tfgfitapp.tfgfitapp.enumeration.ClientLevel.BEGINNER);
+        newClient.setInjuries(request.getInjuries());
+        newClient.setAllergies(request.getAllergies());
+        newClient.setNotes(request.getNotes());
+        newClient.setActive(true);
 
         return toResponse(clientRepository.save(newClient));
     }
@@ -210,26 +215,26 @@ public class ClientService {
     // ===== MAPPER =====
 
     public ClientResponse toResponse(Client client) {
-        return ClientResponse.builder()
-                .id(client.getId())
-                .userId(client.getUser() != null ? client.getUser().getId() : null)
-                .userName(client.getUser() != null ? client.getUser().getName() : null)
-                .userEmail(client.getUser() != null ? client.getUser().getEmail() : null)
-                .trainerId(client.getTrainer() != null ? client.getTrainer().getId() : null)
-                .trainerName(client.getTrainer() != null && client.getTrainer().getUser() != null
-                        ? client.getTrainer().getUser().getName() : null)
-                .age(client.getAge())
-                .gender(client.getGender())
-                .height(client.getHeight())
-                .weight(client.getWeight())
-                .goal(client.getGoal())
-                .level(client.getLevel())
-                .injuries(client.getInjuries())
-                .allergies(client.getAllergies())
-                .notes(client.getNotes())
-                .active(client.getActive())
-                .createdAt(client.getCreatedAt())
-                .build();
+        ClientResponse response = new ClientResponse();
+        response.setId(client.getId());
+        response.setUserId(client.getUser() != null ? client.getUser().getId() : null);
+        response.setUserName(client.getUser() != null ? client.getUser().getName() : null);
+        response.setUserEmail(client.getUser() != null ? client.getUser().getEmail() : null);
+        response.setTrainerId(client.getTrainer() != null ? client.getTrainer().getId() : null);
+        response.setTrainerName(client.getTrainer() != null && client.getTrainer().getUser() != null
+                ? client.getTrainer().getUser().getName() : null);
+        response.setAge(client.getAge());
+        response.setGender(client.getGender());
+        response.setHeight(client.getHeight());
+        response.setWeight(client.getWeight());
+        response.setGoal(client.getGoal());
+        response.setLevel(client.getLevel());
+        response.setInjuries(client.getInjuries());
+        response.setAllergies(client.getAllergies());
+        response.setNotes(client.getNotes());
+        response.setActive(client.getActive());
+        response.setCreatedAt(client.getCreatedAt());
+        return response;
     }
 }
 

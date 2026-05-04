@@ -2,7 +2,6 @@ package com.tfgfitapp.tfgfitapp.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
 
 /**
  * Ejercicio individual dentro de un WorkoutDay.
@@ -10,12 +9,20 @@ import lombok.*;
  */
 @Entity
 @Table(name = "exercises")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Exercise {
+
+    public Exercise() {}
+
+    public Exercise(Long id, WorkoutDay workoutDay, String name, Integer sets, String reps, Integer restSeconds, Integer durationMinutes, String notes) {
+        this.id = id;
+        this.workoutDay = workoutDay;
+        this.name = name;
+        this.sets = sets;
+        this.reps = reps;
+        this.restSeconds = restSeconds;
+        this.durationMinutes = durationMinutes;
+        this.notes = notes;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +49,22 @@ public class Exercise {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public WorkoutDay getWorkoutDay() { return workoutDay; }
+    public void setWorkoutDay(WorkoutDay workoutDay) { this.workoutDay = workoutDay; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Integer getSets() { return sets; }
+    public void setSets(Integer sets) { this.sets = sets; }
+    public String getReps() { return reps; }
+    public void setReps(String reps) { this.reps = reps; }
+    public Integer getRestSeconds() { return restSeconds; }
+    public void setRestSeconds(Integer restSeconds) { this.restSeconds = restSeconds; }
+    public Integer getDurationMinutes() { return durationMinutes; }
+    public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }
 

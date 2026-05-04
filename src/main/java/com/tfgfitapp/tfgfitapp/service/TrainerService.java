@@ -8,7 +8,7 @@ import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
  * como por el ADMIN para consultar la lista de entrenadores.
  */
 @Service
-@RequiredArgsConstructor
 public class TrainerService {
+
+    public TrainerService(TrainerRepository trainerRepository, ClientRepository clientRepository) {
+        this.trainerRepository = trainerRepository;
+        this.clientRepository = clientRepository;
+    }
 
     private final TrainerRepository trainerRepository;
     private final ClientRepository clientRepository;
@@ -77,18 +81,18 @@ public class TrainerService {
 
     public TrainerResponse toResponse(Trainer trainer) {
         long clientCount = clientRepository.countByTrainerId(trainer.getId());
-        return TrainerResponse.builder()
-                .id(trainer.getId())
-                .userId(trainer.getUser() != null ? trainer.getUser().getId() : null)
-                .name(trainer.getUser() != null ? trainer.getUser().getName() : null)
-                .email(trainer.getUser() != null ? trainer.getUser().getEmail() : null)
-                .phone(trainer.getPhone())
-                .specialty(trainer.getSpecialty())
-                .description(trainer.getDescription())
-                .active(trainer.getUser() != null ? trainer.getUser().getActive() : null)
-                .createdAt(trainer.getCreatedAt())
-                .clientCount(clientCount)
-                .build();
+        TrainerResponse response = new TrainerResponse();
+        response.setId(trainer.getId());
+        response.setUserId(trainer.getUser() != null ? trainer.getUser().getId() : null);
+        response.setName(trainer.getUser() != null ? trainer.getUser().getName() : null);
+        response.setEmail(trainer.getUser() != null ? trainer.getUser().getEmail() : null);
+        response.setPhone(trainer.getPhone());
+        response.setSpecialty(trainer.getSpecialty());
+        response.setDescription(trainer.getDescription());
+        response.setActive(trainer.getUser() != null ? trainer.getUser().getActive() : null);
+        response.setCreatedAt(trainer.getCreatedAt());
+        response.setClientCount(clientCount);
+        return response;
     }
 }
 

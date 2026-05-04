@@ -5,8 +5,9 @@
     <style>
         .builder-container { display: flex; gap: 20px; height: calc(100vh - 100px); }
         .sidebar-catalog { width: 300px; background: #fff; border-radius: 12px; padding: 15px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .main-builder { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .day-selector { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .main-builder { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .day-selector { flex-shrink: 0; display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        #days-container { flex: 1; overflow-y: auto; padding-right: 5px; padding-bottom: 30px; }
         .day-btn { flex: 1; min-width: 100px; padding: 10px; border: 2px solid #eaeaea; border-radius: 8px; background: #fff; cursor: pointer; text-align: center; font-weight: 600; color: #555; transition: all 0.2s; }
         .day-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,87,34,0.05); }
         .day-btn:hover { border-color: var(--orange); }
