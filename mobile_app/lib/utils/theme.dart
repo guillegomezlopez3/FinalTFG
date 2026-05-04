@@ -11,12 +11,11 @@ class AppTheme {
       colorScheme: ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.primaryLight,
-        background: AppColors.background,
-        surface: AppColors.cardBg,
+        surface: AppColors.background,
+        onSurface: AppColors.text,
+        surfaceContainer: AppColors.cardBg,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onBackground: AppColors.text,
-        onSurface: AppColors.text,
       ),
       textTheme: GoogleFonts.interTextTheme().copyWith(
         titleLarge: GoogleFonts.inter(
@@ -54,7 +53,7 @@ class AppTheme {
           elevation: 2,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.cardBg,
         elevation: 0,
         shape: RoundedRectangleBorder(

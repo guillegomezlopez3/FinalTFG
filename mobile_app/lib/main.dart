@@ -1,54 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
+import 'providers/diet_provider.dart';
+import 'providers/workout_provider.dart';
+import 'providers/chat_provider.dart';
+import 'ui/screens/auth/login_screen.dart';
+import 'ui/screens/main_scaffold.dart';
 import 'utils/theme.dart';
+
 void main() {
-  runApp(const FitAppMobile());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => DietProvider()),
+        ChangeNotifierProvider(create: (_) => WorkoutProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+      ],
+      child: const FitAppMobile(),
+    ),
+  );
 }
+
 class FitAppMobile extends StatelessWidget {
   const FitAppMobile({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'TFG FitApp',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const DemoScreen(),
+      home: const AuthWrapper(),
     );
   }
 }
-class DemoScreen extends StatelessWidget {
-  const DemoScreen({super.key});
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('TFG FitApp'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Bienvenido a TFG FitApp',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('La tarjeta usa los mismos colores que la web.'),
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Comenzar'),
-              ),
-            ],
-          ),
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    if (authProvider.status == AuthStatus.authenticating) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
-      ),
-    );
+      );
+    }
+
+    if (authProvider.status == AuthStatus.authenticated) {
+      return const MainScaffold();
+    }
+
+    return const LoginScreen();
   }
 }
+
