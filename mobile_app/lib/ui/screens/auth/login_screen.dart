@@ -5,6 +5,9 @@ import '../../../utils/app_colors.dart';
 import '../../widgets/custom_text_field.dart';
 import 'register_screen.dart';
 
+/// Pantalla de inicio de sesión de la aplicación.
+/// 
+/// Permite a los usuarios autenticarse mediante email y contraseña.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -46,129 +49,193 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                const Icon(
-                  Icons.fitness_center,
-                  size: 80,
-                  color: AppColors.primary,
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Background Gradient decoration
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [AppColors.primary.withOpacity(0.1), Colors.transparent],
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Bienvenido de nuevo',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Inicia sesión para continuar entrenando',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                CustomTextField(
-                  label: 'Correo Electrónico',
-                  hint: 'ejemplo@correo.com',
-                  icon: Icons.email_outlined,
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Ingresa tu correo';
-                    if (!value.contains('@')) return 'Ingresa un correo válido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                CustomTextField(
-                  label: 'Contraseña',
-                  hint: '••••••••',
-                  icon: Icons.lock_outline,
-                  controller: _passwordController,
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Ingresa tu contraseña';
-                    if (value.length < 6) return 'Mínimo 6 caracteres';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      '¿Olvidaste tu contraseña?',
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Consumer<AuthProvider>(
-                  builder: (context, auth, _) {
-                    return ElevatedButton(
-                      onPressed: auth.status == AuthStatus.authenticating ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: auth.status == AuthStatus.authenticating
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Iniciar Sesión',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      '¿No tienes una cuenta? ',
-                      style: TextStyle(color: AppColors.textMuted),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Regístrate',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [AppColors.primaryLight.withOpacity(0.1), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.fitness_center_rounded,
+                          size: 64,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const Text(
+                        'LevelUp Mobile',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.text,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'TU COMPAÑERO DE ENTRENAMIENTO',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textMuted.withOpacity(0.6),
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      CustomTextField(
+                        label: 'Correo Electrónico',
+                        hint: 'tu@email.com',
+                        icon: Icons.alternate_email_rounded,
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Ingresa tu correo';
+                          if (!value.contains('@')) return 'Ingresa un correo válido';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      CustomTextField(
+                        label: 'Contraseña',
+                        hint: '••••••••',
+                        icon: Icons.lock_open_rounded,
+                        controller: _passwordController,
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Ingresa tu contraseña';
+                          if (value.length < 6) return 'Mínimo 6 caracteres';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {},
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                          ),
+                          child: const Text('¿Problemas al entrar?'),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, _) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: auth.status == AuthStatus.authenticating ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 20),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                elevation: 0,
+                              ),
+                              child: auth.status == AuthStatus.authenticating
+                                  ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 3,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'ENTRAR AHORA',
+                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 1),
+                                    ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 40),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '¿Aún no tienes cuenta? ',
+                            style: TextStyle(color: AppColors.textMuted.withOpacity(0.8), fontWeight: FontWeight.w600),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              );
+                            },
+                            child: const Text(
+                              'REGÍSTRATE',
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

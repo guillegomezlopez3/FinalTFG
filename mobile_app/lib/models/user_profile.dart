@@ -1,3 +1,4 @@
+/// Respuesta que contiene la información completa del perfil del usuario (entrenador o cliente).
 class UserProfileResponse {
   final int id;
   final String name;

@@ -2,10 +2,20 @@ import 'dart:convert';
 import 'api_client.dart';
 import '../utils/token_utils.dart';
 
+/// Servicio encargado de la autenticación de usuarios.
+/// 
+/// Proporciona métodos para el inicio de sesión, registro y cierre de sesión,
+/// gestionando el almacenamiento de tokens JWT.
 class AuthService {
+  /// Endpoint para el inicio de sesión.
   static const String loginEndpoint = '/auth/login';
+  
+  /// Endpoint para el registro de nuevos usuarios.
   static const String registerEndpoint = '/auth/register';
 
+  /// Realiza el inicio de sesión con [email] y [password].
+  /// 
+  /// Devuelve un mapa con el estado de la operación y los datos del usuario si tiene éxito.
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await ApiClient.post(
@@ -32,11 +42,13 @@ class AuthService {
     }
   }
 
+  /// Registra un nuevo usuario con [name], [email] y [password].
+  /// 
+  /// Devuelve un mapa con el estado del registro.
   static Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String password,
-    required String role, // "CLIENT" o "TRAINER"
   }) async {
     try {
       final response = await ApiClient.post(
@@ -45,7 +57,6 @@ class AuthService {
           'name': name,
           'email': email,
           'password': password,
-          'role': role,
         },
         requiresAuth: false,
       );
@@ -66,10 +77,12 @@ class AuthService {
     }
   }
 
+  /// Cierra la sesión del usuario eliminando los tokens almacenados.
   static Future<void> logout() async {
     await TokenUtils.clearTokens();
   }
 
+  /// Comprueba si el usuario está actualmente autenticado.
   static Future<bool> isAuthenticated() async {
     final token = await TokenUtils.getToken();
     return token != null && token.isNotEmpty;

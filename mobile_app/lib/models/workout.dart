@@ -1,3 +1,4 @@
+/// Modelo que representa un plan de entrenamiento completo.
 class WorkoutPlan {
   final int id;
   final String title;
@@ -36,6 +37,7 @@ class WorkoutPlan {
   }
 }
 
+/// Modelo que representa un día específico de entrenamiento dentro de un plan.
 class WorkoutDay {
   final int id;
   final String dayOfWeek;
@@ -65,6 +67,7 @@ class WorkoutDay {
   }
 }
 
+/// Modelo que representa un ejercicio individual prescrito en un día de entrenamiento.
 class Exercise {
   final int id;
   final String name;
@@ -73,6 +76,8 @@ class Exercise {
   final int? restSeconds;
   final int? durationMinutes;
   final String? notes;
+  final String? gifUrl;
+  final int? predefinedExerciseId;
 
   Exercise({
     required this.id,
@@ -82,6 +87,8 @@ class Exercise {
     this.restSeconds,
     this.durationMinutes,
     this.notes,
+    this.gifUrl,
+    this.predefinedExerciseId,
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
@@ -93,6 +100,8 @@ class Exercise {
       restSeconds: json['restSeconds'],
       durationMinutes: json['durationMinutes'],
       notes: json['notes'],
+      gifUrl: json['gifUrl'],
+      predefinedExerciseId: json['predefinedExerciseId'],
     );
   }
 }

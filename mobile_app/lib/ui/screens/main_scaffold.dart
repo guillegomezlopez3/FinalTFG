@@ -6,6 +6,10 @@ import 'workouts/workouts_screen.dart';
 import 'chat/chat_list_screen.dart';
 import 'profile/profile_screen.dart';
 
+/// Estructura principal de la aplicación que gestiona la navegación inferior.
+/// 
+/// Utiliza un [IndexedStack] para mantener el estado de las diferentes pantallas
+/// principales (Inicio, Dietas, Entrenos, Chat y Perfil).
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
 

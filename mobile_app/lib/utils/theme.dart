@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
+/// Configuración global del tema visual de la aplicación.
+/// 
+/// Define la tipografía, los colores de los componentes y el estilo general
+/// basado en Material 3 y la paleta de [AppColors].
 class AppTheme {
+  /// Obtiene la configuración del tema claro de la aplicación.
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

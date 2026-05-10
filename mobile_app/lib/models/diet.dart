@@ -1,3 +1,4 @@
+/// Modelo que representa un plan nutricional (Dieta).
 class Diet {
   final int id;
   final String title;
@@ -33,6 +34,7 @@ class Diet {
   }
 }
 
+/// Modelo que representa una comida individual dentro de una dieta.
 class DietMeal {
   final int id;
   final String mealType;
@@ -40,6 +42,10 @@ class DietMeal {
   final String foods;
   final int? calories;
   final String? notes;
+  final double? protein;
+  final double? carbs;
+  final double? fats;
+  final bool completed;
 
   DietMeal({
     required this.id,
@@ -48,6 +54,10 @@ class DietMeal {
     required this.foods,
     this.calories,
     this.notes,
+    this.protein,
+    this.carbs,
+    this.fats,
+    this.completed = false,
   });
 
   factory DietMeal.fromJson(Map<String, dynamic> json) {
@@ -58,6 +68,10 @@ class DietMeal {
       foods: json['foods'] ?? '',
       calories: json['calories'],
       notes: json['notes'],
+      protein: json['protein'] != null ? (json['protein'] as num).toDouble() : null,
+      carbs: json['carbs'] != null ? (json['carbs'] as num).toDouble() : null,
+      fats: json['fats'] != null ? (json['fats'] as num).toDouble() : null,
+      completed: json['completed'] ?? false,
     );
   }
 }

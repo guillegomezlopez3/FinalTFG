@@ -1,3 +1,4 @@
+/// Modelo que representa un mensaje individual en una conversación de chat.
 class ChatMessage {
   final int id;
   final int senderId;
@@ -27,6 +28,7 @@ class ChatMessage {
   }
 }
 
+/// Modelo que representa un contacto con el que el usuario puede chatear.
 class ChatContact {
   final int id;
   final String name;
