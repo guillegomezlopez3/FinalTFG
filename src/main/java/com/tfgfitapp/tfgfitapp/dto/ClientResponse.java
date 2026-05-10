@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * DTO de respuesta para datos de un cliente.
- * Evita exponer la entidad JPA directamente y previene bucles de serialización.
+ * DTO de respuesta que contiene la información detallada de un cliente.
+ * 
+ * Encapsula datos antropométricos, objetivos y estado de salud, además de la
+ * vinculación con su entrenador asignado.
  */
 public class ClientResponse {
 

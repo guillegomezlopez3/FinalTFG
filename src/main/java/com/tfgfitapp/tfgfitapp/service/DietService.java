@@ -17,12 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de gestión de dietas y sus comidas.
- *
- * Control de acceso:
- * - TRAINER: crea, edita y elimina dietas para sus propios clientes.
- * - CLIENT: solo puede leer las dietas que le pertenecen.
- * - ADMIN: acceso completo.
+ * Servicio para la gestión de Dietas y Comidas.
+ * 
+ * Proporciona la lógica para crear planes nutricionales, gestionar las comidas
+ * diarias y controlar el seguimiento de las mismas por parte de los clientes.
  */
 @Service
 public class DietService {
@@ -43,7 +41,11 @@ public class DietService {
     // ===== DIETAS =====
 
     /**
-     * TRAINER crea una dieta para uno de sus clientes.
+     * Crea una nueva dieta asignada a un cliente.
+     * 
+     * @param request Datos de la dieta.
+     * @param currentUser Entrenador que crea la dieta.
+     * @return Respuesta con los datos de la dieta guardada.
      */
     @Transactional
     public DietResponse createDiet(DietRequest request, User currentUser) {
@@ -64,7 +66,11 @@ public class DietService {
     }
 
     /**
-     * Obtiene todas las dietas de un cliente con control de acceso.
+     * Obtiene todas las dietas asociadas a un cliente específico.
+     * 
+     * @param clientId ID del cliente.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return Lista de respuestas con las dietas del cliente.
      */
     @Transactional(readOnly = true)
     public List<DietResponse> getDietsByClient(Long clientId, User currentUser) {
@@ -77,7 +83,11 @@ public class DietService {
     }
 
     /**
-     * Obtiene una dieta por ID con control de acceso.
+     * Obtiene los detalles de una dieta específica por su ID.
+     * 
+     * @param dietId ID de la dieta.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return Respuesta con los datos de la dieta.
      */
     @Transactional(readOnly = true)
     public DietResponse getDietById(Long dietId, User currentUser) {
@@ -133,6 +143,10 @@ public class DietService {
         meal.setFoods(request.getFoods());
         meal.setCalories(request.getCalories());
         meal.setNotes(request.getNotes());
+        meal.setProtein(request.getProtein());
+        meal.setCarbs(request.getCarbs());
+        meal.setFats(request.getFats());
+        meal.setCompleted(request.getCompleted() != null ? request.getCompleted() : false);
 
         return toMealResponse(dietMealRepository.save(meal));
     }
@@ -145,7 +159,6 @@ public class DietService {
         Trainer trainer = getTrainerOrThrow(currentUser);
         DietMeal meal = getMealOrThrow(mealId);
 
-        // Verificar que la dieta pertenece al trainer
         if (!meal.getDiet().getTrainer().getId().equals(trainer.getId())) {
             throw new AccessDeniedException("No tienes acceso a esta comida");
         }
@@ -155,7 +168,24 @@ public class DietService {
         if (request.getFoods() != null)    meal.setFoods(request.getFoods());
         if (request.getCalories() != null) meal.setCalories(request.getCalories());
         if (request.getNotes() != null)    meal.setNotes(request.getNotes());
+        if (request.getProtein() != null)  meal.setProtein(request.getProtein());
+        if (request.getCarbs() != null)    meal.setCarbs(request.getCarbs());
+        if (request.getFats() != null)     meal.setFats(request.getFats());
+        if (request.getCompleted() != null) meal.setCompleted(request.getCompleted());
 
+        return toMealResponse(dietMealRepository.save(meal));
+    }
+
+    /**
+     * CLIENT marca una comida como completada/pendiente.
+     */
+    @Transactional
+    public DietMealResponse toggleMealCompletion(Long mealId, User currentUser) {
+        DietMeal meal = getMealOrThrow(mealId);
+        if (!meal.getDiet().getClient().getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("No tienes acceso a esta comida");
+        }
+        meal.setCompleted(meal.getCompleted() == null ? true : !meal.getCompleted());
         return toMealResponse(dietMealRepository.save(meal));
     }
 
@@ -264,6 +294,10 @@ public class DietService {
         response.setFoods(meal.getFoods());
         response.setCalories(meal.getCalories());
         response.setNotes(meal.getNotes());
+        response.setProtein(meal.getProtein());
+        response.setCarbs(meal.getCarbs());
+        response.setFats(meal.getFats());
+        response.setCompleted(meal.getCompleted());
         return response;
     }
 }

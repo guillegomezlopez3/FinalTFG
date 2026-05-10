@@ -6,8 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 /**
- * DTO para crear o actualizar una dieta.
- * El trainer se obtiene del usuario autenticado.
+ * DTO para la creación o actualización de un plan nutricional (dieta).
  */
 public class DietRequest {
 

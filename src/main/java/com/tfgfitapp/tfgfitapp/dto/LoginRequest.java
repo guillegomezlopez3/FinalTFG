@@ -4,7 +4,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * DTO para el endpoint POST /auth/login.
+ * DTO para la solicitud de inicio de sesión.
+ * 
+ * Contiene las credenciales necesarias (email y contraseña) para autenticar a un usuario.
  */
 public class LoginRequest {
 

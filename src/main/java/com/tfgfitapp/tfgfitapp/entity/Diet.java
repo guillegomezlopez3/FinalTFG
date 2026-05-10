@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dieta asignada por un Trainer a un Client.
- * Contiene múltiples DietMeals (comidas del día).
+ * Entidad que representa una Dieta en el sistema.
+ * 
+ * Una dieta es asignada por un {@link Trainer} a un {@link Client}.
+ * Contiene una colección de comidas ({@link DietMeal}) y define un periodo
+ * de validez (fecha de inicio y fin).
  */
 @Entity
 @Table(name = "diets")
@@ -77,27 +80,49 @@ public class Diet {
     }
 
     // Manual Getters/Setters
+    /** @return El identificador único de la dieta. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El cliente asociado. */
     public Client getClient() { return client; }
+    /** @param client El cliente a asignar. */
     public void setClient(Client client) { this.client = client; }
+    /** @return El entrenador que creó la dieta. */
     public Trainer getTrainer() { return trainer; }
+    /** @param trainer El entrenador a asignar. */
     public void setTrainer(Trainer trainer) { this.trainer = trainer; }
+    /** @return El título de la dieta. */
     public String getTitle() { return title; }
+    /** @param title El nuevo título. */
     public void setTitle(String title) { this.title = title; }
+    /** @return Descripción de la dieta. */
     public String getDescription() { return description; }
+    /** @param description La nueva descripción. */
     public void setDescription(String description) { this.description = description; }
+    /** @return Fecha de inicio de la dieta. */
     public LocalDate getStartDate() { return startDate; }
+    /** @param startDate La nueva fecha de inicio. */
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    /** @return Fecha de fin de la dieta. */
     public LocalDate getEndDate() { return endDate; }
+    /** @param endDate La nueva fecha de fin. */
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    /** @return true si la dieta está activa. */
     public Boolean getActive() { return active; }
+    /** @param active El nuevo estado. */
     public void setActive(Boolean active) { this.active = active; }
+    /** @return Fecha de creación. */
     public LocalDateTime getCreatedAt() { return createdAt; }
+    /** @param createdAt La nueva fecha de creación. */
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    /** @return Fecha de última actualización. */
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    /** @param updatedAt La nueva fecha de actualización. */
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    /** @return Lista de comidas incluidas en la dieta. */
     public List<DietMeal> getMeals() { return meals; }
+    /** @param meals La nueva lista de comidas. */
     public void setMeals(List<DietMeal> meals) { this.meals = meals; }
 
     @PreUpdate

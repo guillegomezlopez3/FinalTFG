@@ -3,7 +3,7 @@ package com.tfgfitapp.tfgfitapp.dto;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * DTO para crear o actualizar un ejercicio dentro de un día de entrenamiento.
+ * DTO para la definición de un ejercicio dentro de una rutina de entrenamiento.
  */
 public class ExerciseRequest {
 
@@ -17,6 +17,8 @@ public class ExerciseRequest {
     private Integer restSeconds;
     private Integer durationMinutes;
     private String notes;
+    private String gifUrl;
+    private Long predefinedExerciseId;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -30,5 +32,9 @@ public class ExerciseRequest {
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getGifUrl() { return gifUrl; }
+    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    public Long getPredefinedExerciseId() { return predefinedExerciseId; }
+    public void setPredefinedExerciseId(Long predefinedExerciseId) { this.predefinedExerciseId = predefinedExerciseId; }
 }
 

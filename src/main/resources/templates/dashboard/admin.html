@@ -111,9 +111,7 @@ async function loadTrainers() {
         <tr>
             <td>
                 <div class="d-flex align-items-center gap-2">
-                    <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.72rem;flex-shrink:0;">
-                        ${(t.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-                    </div>
+                    ${getAvatarHtml(t.name, null, 'sm')}
                     <span style="font-weight:600;font-size:.88rem;">${t.name||'—'}</span>
                 </div>
             </td>
@@ -154,9 +152,12 @@ async function loadClients() {
         body.innerHTML = data.content.map(c => `
         <tr>
             <td>
-                <div>
-                    <div style="font-weight:600;font-size:.88rem;">${c.userName||'—'}</div>
-                    <div style="font-size:.76rem;color:var(--text-muted);">${c.userEmail||''}</div>
+                <div class="d-flex align-items-center gap-2">
+                    ${getAvatarHtml(c.userName, null, 'sm')}
+                    <div>
+                        <div style="font-weight:600;font-size:.88rem;">${c.userName||'—'}</div>
+                        <div style="font-size:.76rem;color:var(--text-muted);">${c.userEmail||''}</div>
+                    </div>
                 </div>
             </td>
             <td style="font-size:.82rem;">${c.trainerName||'<span class="text-muted">Sin asignar</span>'}</td>

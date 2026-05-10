@@ -8,8 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Entrenador personal. Cada Trainer está vinculado a un único User con role TRAINER.
- * Un Trainer puede tener muchos Clients, Diets y WorkoutPlans.
+ * Entidad que representa a un Entrenador en el sistema.
+ * 
+ * Un entrenador está vinculado a un {@link User} con rol TRAINER.
+ * Gestiona sus clientes, dietas y planes de entrenamiento.
+ * Incluye campos para la integración con Stripe para la gestión de suscripciones.
  */
 @Entity
 @Table(name = "trainers")
@@ -44,6 +47,18 @@ public class Trainer {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "stripe_customer_id", length = 100)
+    private String stripeCustomerId;
+
+    @Column(name = "stripe_subscription_id", length = 100)
+    private String stripeSubscriptionId;
+
+    @Column(name = "subscription_active", nullable = false)
+    private Boolean subscriptionActive = false;
+
+    @Column(name = "trial_ends_at")
+    private LocalDateTime trialEndsAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -66,16 +81,43 @@ public class Trainer {
     }
 
     // Manual Getters/Setters
+    /** @return El identificador único del entrenador. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El usuario base asociado. */
     public User getUser() { return user; }
+    /** @param user El nuevo usuario a asociar. */
     public void setUser(User user) { this.user = user; }
+    /** @return El teléfono de contacto. */
     public String getPhone() { return phone; }
+    /** @param phone El nuevo teléfono. */
     public void setPhone(String phone) { this.phone = phone; }
+    /** @return La especialidad del entrenador. */
     public String getSpecialty() { return specialty; }
+    /** @param specialty La nueva especialidad. */
     public void setSpecialty(String specialty) { this.specialty = specialty; }
+    /** @return Descripción profesional. */
     public String getDescription() { return description; }
+    /** @param description La nueva descripción. */
     public void setDescription(String description) { this.description = description; }
+    /** @return ID del cliente en Stripe. */
+    public String getStripeCustomerId() { return stripeCustomerId; }
+    /** @param stripeCustomerId El ID de Stripe. */
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
+    /** @return ID de la suscripción en Stripe. */
+    public String getStripeSubscriptionId() { return stripeSubscriptionId; }
+    /** @param stripeSubscriptionId El ID de la suscripción. */
+    public void setStripeSubscriptionId(String stripeSubscriptionId) { this.stripeSubscriptionId = stripeSubscriptionId; }
+    /** @return true si la suscripción está activa. */
+    public Boolean getSubscriptionActive() { return subscriptionActive; }
+    /** @param subscriptionActive El nuevo estado de suscripción. */
+    public void setSubscriptionActive(Boolean subscriptionActive) { this.subscriptionActive = subscriptionActive; }
+    /** @return Fecha de fin del periodo de prueba. */
+    public LocalDateTime getTrialEndsAt() { return trialEndsAt; }
+    /** @param trialEndsAt La nueva fecha de fin. */
+    public void setTrialEndsAt(LocalDateTime trialEndsAt) { this.trialEndsAt = trialEndsAt; }
+    /** @return Fecha de registro del entrenador. */
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     @Override

@@ -1,7 +1,10 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
 /**
- * DTO de estadisticas globales del sistema para el panel de ADMIN.
+ * DTO que contiene las estadísticas globales del sistema para el panel de administración.
+ * 
+ * Resume métricas clave como el total de usuarios, entrenadores, clientes y el
+ * estado de los planes de entrenamiento y dietas.
  */
 public class AdminStatsResponse {
 

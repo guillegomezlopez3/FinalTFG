@@ -92,6 +92,11 @@ async function apiFetch(path, options = {}) {
         return;
     }
 
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`);
+    }
+
     return response;
 }
 
@@ -127,11 +132,11 @@ async function login(email, password) {
 
 // ── Register ──────────────────────────────────────────────────────────────────
 
-async function register(name, email, password, role) {
+async function register(name, email, password) {
     const res = await fetch(API_BASE + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role })
+        body: JSON.stringify({ name, email, password })
     });
 
     if (!res.ok) {
@@ -176,6 +181,30 @@ function formatDate(isoDate) {
 function formatDateTime(isoDateTime) {
     if (!isoDateTime) return '—';
     return new Date(isoDateTime).toLocaleString('es-ES');
+}
+
+/**
+ * Genera el HTML de un avatar. Si tiene foto la muestra, si no, usa las iniciales.
+ * @param {string} name - Nombre del usuario
+ * @param {string} avatarUrl - URL de la imagen (opcional)
+ * @param {string} size - Clase de tamaño (opcional)
+ */
+function getAvatarHtml(name, avatarUrl, size = '') {
+    if (avatarUrl && avatarUrl !== '/images/default-avatar.svg') {
+        return `<img src="${avatarUrl}" alt="${name}" class="avatar-img ${size}" onerror="this.parentElement.innerHTML=getAvatarInitials('${name}', '${size}')">`;
+    }
+    return getAvatarInitials(name, size);
+}
+
+function getAvatarInitials(name, size = '') {
+    const initials = (name || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const colors = ['#FF7A00', '#2563eb', '#059669', '#7c3aed', '#db2777', '#ea580c'];
+    // Color determinístico basado en el nombre
+    let hash = 0;
+    for (let i = 0; i < (name || '').length; i++) hash = (name.charCodeAt(i) + ((hash << 5) - hash));
+    const color = colors[Math.abs(hash) % colors.length];
+    
+    return `<div class="avatar-initials ${size}" style="background-color: ${color}">${initials}</div>`;
 }
 
 // ── SweetAlert2 Helpers ───────────────────────────────────────────────────────

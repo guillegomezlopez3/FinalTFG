@@ -3,9 +3,14 @@ package com.tfgfitapp.tfgfitapp.dto;
 import com.tfgfitapp.tfgfitapp.enumeration.ClientLevel;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
+/**
+ * DTO utilizado por los entrenadores para registrar manualmente a un nuevo cliente.
+ * 
+ * Incluye tanto los datos de la cuenta de usuario (nombre, email) como los
+ * datos iniciales del perfil físico y objetivos del cliente.
+ */
 public class CreateClientByTrainerRequest {
 
     public CreateClientByTrainerRequest() {}
@@ -32,8 +37,7 @@ public class CreateClientByTrainerRequest {
     @Email(message = "Formato de email inválido")
     private String email;
 
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    // Contraseña opcional: si no se proporciona se usa la contraseña por defecto "lvlupRtg"
     private String password;
 
     private Integer age;

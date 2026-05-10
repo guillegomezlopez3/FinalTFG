@@ -21,17 +21,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
- * Configuración central de Spring Security.
- *
- * - CSRF desactivado: la app es REST stateless con JWT, no usa sesiones ni cookies de sesión.
- * - STATELESS: no se crea HttpSession, toda la autenticación va por JWT en cada request.
- * - @EnableMethodSecurity: permite usar @PreAuthorize en los controladores/servicios
- *   para el control fino de roles (ADMIN, TRAINER, CLIENT).
- *
- * Rutas web (Thymeleaf):
- * - /, /login, /register y recursos estáticos son públicos.
- * - /dashboard/** y el resto de rutas web requieren autenticación (verificada
- *   en el propio controller via JS + JWT en localStorage).
+ * Configuración central de seguridad del sistema mediante Spring Security.
+ * 
+ * Establece la política de seguridad stateless (sin sesión), configura el filtro JWT,
+ * define los permisos de acceso por ruta y gestiona la codificación de contraseñas.
  */
 @Configuration
 @EnableWebSecurity
@@ -50,6 +43,13 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final CorsConfigurationSource corsConfigurationSource;
 
+    /**
+     * Configura la cadena de filtros de seguridad.
+     * 
+     * @param http Objeto para configurar la seguridad web.
+     * @return La cadena de filtros configurada.
+     * @throws Exception Si ocurre un error en la configuración.
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -57,9 +57,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // ── Endpoints públicos de la API ──────────────────────────
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/stripe/webhook").permitAll()
                 // ── Páginas web públicas (Thymeleaf) ─────────────────────
-                .requestMatchers("/", "/login", "/register").permitAll()
+                .requestMatchers("/", "/login", "/register", "/confirm-email", "/payment-success", "/payment-cancel").permitAll()
                 // ── Panel privado Thymeleaf: la autenticación se gestiona
                 //    client-side (JWT en localStorage + JS). La seguridad
                 //    real está en cada endpoint /api/** que exige JWT.
@@ -81,6 +81,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Configura el proveedor de autenticación basado en base de datos.
+     * 
+     * @return Proveedor de autenticación configurado.
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -94,6 +99,11 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Bean para el cifrado de contraseñas.
+     * 
+     * @return Instancia de BCryptPasswordEncoder.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

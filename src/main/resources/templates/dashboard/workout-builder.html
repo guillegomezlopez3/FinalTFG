@@ -304,6 +304,15 @@ function appendExCard(dow, ex) {
                 <input type="number" class="form-control param-input ex-rest" value="${ex.restSeconds||''}">
             </div>
         </div>
+        <div class="mt-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label m-0" style="font-size:0.75rem;">Instrucciones / Comentarios</label>
+                <button class="btn btn-link p-0 text-orange" style="font-size:0.7rem; text-decoration:none;" onclick="suggestDescription(this, '${ex.name.replace(/'/g, "\\'")}')">
+                    <i class="bi bi-magic"></i> Sugerir descripción
+                </button>
+            </div>
+            <textarea class="form-control form-control-sm ex-notes" rows="2" placeholder="Notas sobre la ejecución...">${ex.notes||''}</textarea>
+        </div>
     `;
     container.appendChild(div);
 }
@@ -363,7 +372,8 @@ async function saveAllDays() {
                         name: card.querySelector('.ex-name').value,
                         sets: parseInt(card.querySelector('.ex-sets').value) || null,
                         reps: card.querySelector('.ex-reps').value || null,
-                        restSeconds: parseInt(card.querySelector('.ex-rest').value) || null
+                        restSeconds: parseInt(card.querySelector('.ex-rest').value) || null,
+                        notes: card.querySelector('.ex-notes').value || null
                     };
                     await apiFetch(`/workout-plans/days/${dayId}/exercises`, {
                         method: 'POST', body: JSON.stringify(exReq)
@@ -384,6 +394,18 @@ async function saveAllDays() {
         btn.disabled = false;
         alert('Error al guardar el plan. Se interrumpió el proceso.');
     }
+}
+
+function suggestDescription(btn, name) {
+    const textarea = btn.parentElement.parentElement.querySelector('textarea');
+    const templates = [
+        `Ejecuta el movimiento de forma controlada, enfocándote en la conexión mente-músculo. Mantén el core activado durante toda la serie.`,
+        `Asegúrate de realizar el rango completo de movimiento. Evita impulsos innecesarios y mantén una respiración constante.`,
+        `Mantén una postura sólida. La fase excéntrica (bajada) debe ser más lenta que la concéntrica (subida).`,
+        `Enfoque en la técnica estricta. Si pierdes la forma, reduce el peso ligeramente.`
+    ];
+    const random = templates[Math.floor(Math.random() * templates.length)];
+    textarea.value = `Instrucciones para ${name}:\n${random}`;
 }
 </script>
 </body>

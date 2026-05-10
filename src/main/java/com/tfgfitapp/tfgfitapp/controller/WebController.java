@@ -4,46 +4,49 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Controlador MVC que sirve las páginas Thymeleaf.
- *
- * Estrategia de autenticación en la capa web:
- * - Las páginas públicas (/, /login, /register) no requieren token.
- * - Las páginas privadas (/dashboard/**) son HTML estáticos que, al cargarse,
- *   leen el JWT del localStorage y hacen peticiones AJAX a la API REST.
- * - Si el token no existe o está expirado, el propio JavaScript redirige a /login.
- *
- * Rutas:
- *   GET /            → landing page (index.html)
- *   GET /login       → formulario de login (login.html)
- *   GET /register    → formulario de registro (register.html)
- *   GET /dashboard   → panel principal tras login (dashboard.html)
- *   GET /dashboard/clients   → listado de clientes (clients.html)
- *   GET /dashboard/diets     → listado de dietas (diets.html)
- *   GET /dashboard/workouts        → planes de entrenamiento (workouts.html)
- *   GET /dashboard/workout-builder → constructor interactivo de planes (workout-builder.html)
- *   GET /dashboard/diet-builder    → constructor interactivo de dietas (diet-builder.html)
- *   GET /dashboard/progress        → registros de progreso (progress.html)
- *   GET /dashboard/admin           → panel de administración (admin.html)
- *   GET /dashboard/profile         → perfil del usuario (profile.html)
+ * Controlador MVC para servir las páginas HTML del sistema.
+ * 
+ * Gestiona la navegación principal, incluyendo la landing page, login, registro
+ * y todas las vistas del dashboard privado.
  */
 @Controller
 public class WebController {
 
+    /** @return La página de inicio (Landing Page). */
     @GetMapping("/")
     public String index() {
         return "index";
     }
 
+    /** @return La página de inicio de sesión. */
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
+    /** @return La página de registro de nuevos usuarios. */
     @GetMapping("/register")
     public String register() {
         return "register";
     }
 
+    /** @return La página de confirmación de correo electrónico. */
+    @GetMapping("/confirm-email")
+    public String confirmEmail() {
+        return "confirm-email";
+    }
+
+    @GetMapping("/payment-success")
+    public String paymentSuccess() {
+        return "payment-success";
+    }
+
+    @GetMapping("/payment-cancel")
+    public String paymentCancel() {
+        return "payment-cancel";
+    }
+
+    /** @return El panel principal (Dashboard). */
     @GetMapping("/dashboard")
     public String dashboard() {
         return "dashboard/dashboard";
@@ -87,6 +90,16 @@ public class WebController {
     @GetMapping("/dashboard/diet-builder")
     public String dietBuilder() {
         return "dashboard/diet-builder";
+    }
+
+    @GetMapping("/dashboard/workout-view")
+    public String workoutView() {
+        return "dashboard/workout-view";
+    }
+
+    @GetMapping("/dashboard/diet-view")
+    public String dietView() {
+        return "dashboard/diet-view";
     }
 }
 

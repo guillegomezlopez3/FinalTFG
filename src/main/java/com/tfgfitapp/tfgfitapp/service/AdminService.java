@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Servicio exclusivo para el ADMIN.
- * Proporciona estadisticas globales, listados paginados y gestion de usuarios.
+ * Servicio exclusivo para el rol de Administrador.
+ * 
+ * Proporciona lógica de negocio para la consulta de estadísticas globales del sistema,
+ * gestión de todos los clientes registrados y control de estado (activación/desactivación) de usuarios.
  */
 @Service
 public class AdminService {
@@ -40,7 +42,9 @@ public class AdminService {
     }
 
     /**
-     * Devuelve estadisticas globales del sistema.
+     * Obtiene estadísticas agregadas del sistema para el panel de administración.
+     * 
+     * @return Objeto con contadores de usuarios, entrenadores, clientes y planes.
      */
     @Transactional(readOnly = true)
     public AdminStatsResponse getStats() {
@@ -62,8 +66,10 @@ public class AdminService {
     }
 
     /**
-     * Lista paginada de todos los clientes del sistema.
-     * Soporta ?page=0&size=10&sort=createdAt,desc
+     * Obtiene una lista paginada de todos los clientes en la plataforma.
+     * 
+     * @param pageable Configuración de paginación y ordenamiento.
+     * @return Respuesta paginada con la información de los clientes.
      */
     @Transactional(readOnly = true)
     public PageResponse<ClientResponse> getAllClients(Pageable pageable) {

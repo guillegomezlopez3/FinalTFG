@@ -81,29 +81,53 @@ public class WorkoutPlan {
     }
 
     // Manual Getters/Setters
+    /** @return El identificador único del plan. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El cliente dueño del plan. */
     public Client getClient() { return client; }
+    /** @param client El cliente a asociar. */
     public void setClient(Client client) { this.client = client; }
+    /** @return El entrenador que diseñó el plan. */
     public Trainer getTrainer() { return trainer; }
+    /** @param trainer El entrenador a asociar. */
     public void setTrainer(Trainer trainer) { this.trainer = trainer; }
+    /** @return Título descriptivo del plan. */
     public String getTitle() { return title; }
+    /** @param title El nuevo título. */
     public void setTitle(String title) { this.title = title; }
+    /** @return Objetivo principal del plan (e.g., "Pérdida de grasa"). */
     public String getObjective() { return objective; }
+    /** @param objective El nuevo objetivo. */
     public void setObjective(String objective) { this.objective = objective; }
+    /** @return Recomendaciones o notas generales. */
     public String getNotes() { return notes; }
+    /** @param notes Las nuevas notas. */
     public void setNotes(String notes) { this.notes = notes; }
+    /** @return Fecha de inicio de vigencia. */
     public LocalDate getStartDate() { return startDate; }
+    /** @param startDate La nueva fecha de inicio. */
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    /** @return Fecha de fin de vigencia. */
     public LocalDate getEndDate() { return endDate; }
+    /** @param endDate La nueva fecha de fin. */
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    /** @return true si el plan está activo actualmente. */
     public Boolean getActive() { return active; }
+    /** @param active El nuevo estado de activación. */
     public void setActive(Boolean active) { this.active = active; }
+    /** @return Fecha de creación del plan. */
     public LocalDateTime getCreatedAt() { return createdAt; }
+    /** @param createdAt La nueva fecha de creación. */
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    /** @return Fecha de la última modificación. */
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+    /** @param updatedAt La nueva fecha de actualización. */
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    /** @return Lista de días que componen la rutina semanal. */
     public List<WorkoutDay> getWorkoutDays() { return workoutDays; }
+    /** @param workoutDays La nueva lista de días. */
     public void setWorkoutDays(List<WorkoutDay> workoutDays) { this.workoutDays = workoutDays; }
 
     @PreUpdate

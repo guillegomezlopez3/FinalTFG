@@ -14,19 +14,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Controlador de gestión de dietas y comidas.
- *
- * Endpoints de dietas:
- * - POST   /api/diets                      → TRAINER: crea dieta para uno de sus clientes
- * - GET    /api/diets/client/{clientId}    → TRAINER (propio) / CLIENT (suyas) / ADMIN
- * - GET    /api/diets/{id}                 → TRAINER (propia) / CLIENT (suya) / ADMIN
- * - PUT    /api/diets/{id}                 → TRAINER (propia) / ADMIN
- * - DELETE /api/diets/{id}                 → TRAINER (propia) / ADMIN
- *
- * Endpoints de comidas (sub-recurso):
- * - POST   /api/diets/{id}/meals           → TRAINER
- * - PUT    /api/diets/meals/{mealId}       → TRAINER
- * - DELETE /api/diets/meals/{mealId}       → TRAINER
+ * Controlador para la gestión de Dietas y Comidas.
+ * 
+ * Permite a los entrenadores crear y modificar dietas para sus clientes,
+ * y a los clientes consultar sus dietas asignadas y marcar comidas como completadas.
  */
 @RestController
 @RequestMapping("/api/diets")
@@ -40,6 +31,13 @@ public class DietController {
 
     // ===== DIETAS =====
 
+    /**
+     * Crea una nueva dieta para un cliente.
+     * 
+     * @param request Datos de la dieta.
+     * @param currentUser Usuario que realiza la creación (entrenador).
+     * @return 201 Created con la dieta creada.
+     */
     @PostMapping
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
     public ResponseEntity<DietResponse> createDiet(
@@ -49,6 +47,13 @@ public class DietController {
                 .body(dietService.createDiet(request, currentUser));
     }
 
+    /**
+     * Obtiene todas las dietas de un cliente específico.
+     * 
+     * @param clientId Identificador del cliente.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return Lista de dietas encontradas.
+     */
     @GetMapping("/client/{clientId}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
     public ResponseEntity<List<DietResponse>> getDietsByClient(
@@ -57,6 +62,13 @@ public class DietController {
         return ResponseEntity.ok(dietService.getDietsByClient(clientId, currentUser));
     }
 
+    /**
+     * Obtiene los detalles de una dieta por su ID.
+     * 
+     * @param id Identificador de la dieta.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return La dieta encontrada.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
     public ResponseEntity<DietResponse> getDietById(
@@ -65,6 +77,14 @@ public class DietController {
         return ResponseEntity.ok(dietService.getDietById(id, currentUser));
     }
 
+    /**
+     * Actualiza una dieta existente.
+     * 
+     * @param id Identificador de la dieta.
+     * @param request Datos actualizados.
+     * @param currentUser Usuario que realiza la actualización.
+     * @return La dieta actualizada.
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
     public ResponseEntity<DietResponse> updateDiet(
@@ -74,6 +94,13 @@ public class DietController {
         return ResponseEntity.ok(dietService.updateDiet(id, request, currentUser));
     }
 
+    /**
+     * Elimina una dieta por su ID.
+     * 
+     * @param id Identificador de la dieta.
+     * @param currentUser Usuario que realiza la eliminación.
+     * @return 204 No Content.
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
     public ResponseEntity<Void> deleteDiet(
@@ -102,6 +129,14 @@ public class DietController {
             @RequestBody DietMealRequest request,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(dietService.updateMeal(mealId, request, currentUser));
+    }
+
+    @PatchMapping("/meals/{mealId}/toggle")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    public ResponseEntity<DietMealResponse> toggleMealCompletion(
+            @PathVariable Long mealId,
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(dietService.toggleMealCompletion(mealId, currentUser));
     }
 
     @DeleteMapping("/meals/{mealId}")

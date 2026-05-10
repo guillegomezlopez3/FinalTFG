@@ -5,8 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * DTO de respuesta para un plan de entrenamiento.
- * Incluye los días de entrenamiento embebidos.
+ * DTO de respuesta que representa un plan de entrenamiento completo con sus días y ejercicios.
  */
 public class WorkoutPlanResponse {
 

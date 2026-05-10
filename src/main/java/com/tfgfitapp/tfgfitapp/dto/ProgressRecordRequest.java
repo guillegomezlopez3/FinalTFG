@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * DTO para crear o actualizar un registro de progreso.
- * Todos los campos de medidas son opcionales; solo la fecha es obligatoria.
+ * DTO para registrar o actualizar medidas antropométricas de progreso.
+ * 
+ * Permite al cliente realizar un seguimiento de su evolución física.
+ * Todos los campos de medidas son opcionales.
  */
 public class ProgressRecordRequest {
 
@@ -24,6 +26,7 @@ public class ProgressRecordRequest {
     private BigDecimal arms;
     private BigDecimal legs;
     private String notes;
+    private Long clientId; // ID del cliente al que se le asigna el progreso (usado por trainers)
 
     public LocalDate getRecordDate() { return recordDate; }
     public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
@@ -43,5 +46,7 @@ public class ProgressRecordRequest {
     public void setLegs(BigDecimal legs) { this.legs = legs; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public Long getClientId() { return clientId; }
+    public void setClientId(Long clientId) { this.clientId = clientId; }
 }
 

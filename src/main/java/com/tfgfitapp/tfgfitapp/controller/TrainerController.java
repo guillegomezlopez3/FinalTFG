@@ -15,13 +15,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Controlador para el perfil del entrenador.
- *
- * Endpoints:
- * - GET /api/trainers/me       → TRAINER: su propio perfil con conteo de clientes
- * - PUT /api/trainers/me       → TRAINER: actualiza su perfil
- * - GET /api/trainers          → ADMIN: lista paginada de todos los entrenadores
- * - GET /api/trainers/{id}     → ADMIN: perfil de un entrenador concreto
+ * Controlador para la gestión de perfiles de Entrenadores.
+ * 
+ * Proporciona endpoints para que los entrenadores consulten y actualicen su perfil,
+ * para que los administradores listen y consulten todos los entrenadores.
  */
 @RestController
 @RequestMapping("/api/trainers")
@@ -33,6 +30,12 @@ public class TrainerController {
 
     private final TrainerService trainerService;
 
+    /**
+     * Obtiene el perfil del entrenador autenticado.
+     * 
+     * @param currentUser Entrenador autenticado.
+     * @return 200 OK con los detalles del perfil.
+     */
     @GetMapping("/me")
     @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<TrainerResponse> getMyProfile(
@@ -40,6 +43,13 @@ public class TrainerController {
         return ResponseEntity.ok(trainerService.getMyProfile(currentUser));
     }
 
+    /**
+     * Actualiza el perfil del entrenador autenticado.
+     * 
+     * @param request Datos del perfil actualizados.
+     * @param currentUser Entrenador autenticado.
+     * @return 200 OK con el perfil actualizado.
+     */
     @PutMapping("/me")
     @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<TrainerResponse> updateMyProfile(

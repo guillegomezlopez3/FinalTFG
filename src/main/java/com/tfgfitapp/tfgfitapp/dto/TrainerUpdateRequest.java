@@ -1,8 +1,7 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
 /**
- * DTO para que el TRAINER actualice su propio perfil.
- * Solo se modifican los campos no nulos.
+ * DTO para la actualización de los datos profesionales del perfil de un entrenador.
  */
 public class TrainerUpdateRequest {
 

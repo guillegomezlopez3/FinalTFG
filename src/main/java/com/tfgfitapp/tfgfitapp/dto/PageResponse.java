@@ -5,8 +5,12 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 /**
- * Wrapper generico para respuestas paginadas.
- * Evita exponer el objeto Page de Spring directamente en la API.
+ * Envoltorio genérico para respuestas paginadas.
+ * 
+ * Estandariza la entrega de listas de datos junto con metadatos de paginación
+ * (página actual, total de elementos, etc.) desacoplándose del objeto Page de Spring.
+ * 
+ * @param <T> Tipo de los elementos contenidos en la página.
  */
 public class PageResponse<T> {
 

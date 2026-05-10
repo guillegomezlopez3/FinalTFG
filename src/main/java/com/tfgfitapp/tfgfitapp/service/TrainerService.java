@@ -14,9 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Servicio de gestion del perfil del entrenador.
- * Usado tanto por el propio TRAINER para editar su perfil
- * como por el ADMIN para consultar la lista de entrenadores.
+ * Servicio para la gestión de perfiles de Entrenadores.
+ * 
+ * Proporciona lógica para que los entrenadores actualicen su información profesional
+ * y para que los administradores supervisen la lista de entrenadores registrados.
  */
 @Service
 public class TrainerService {
@@ -30,7 +31,10 @@ public class TrainerService {
     private final ClientRepository clientRepository;
 
     /**
-     * TRAINER obtiene su propio perfil con numero de clientes.
+     * Obtiene el perfil del entrenador autenticado.
+     * 
+     * @param currentUser Usuario autenticado.
+     * @return Perfil detallado del entrenador.
      */
     @Transactional(readOnly = true)
     public TrainerResponse getMyProfile(User currentUser) {
@@ -39,8 +43,11 @@ public class TrainerService {
     }
 
     /**
-     * TRAINER actualiza su propio perfil (telefono, especialidad, descripcion).
-     * Solo se actualizan los campos no nulos.
+     * Actualiza la información profesional del perfil del entrenador.
+     * 
+     * @param request Datos de actualización (especialidad, descripción, etc.).
+     * @param currentUser Entrenador que realiza la actualización.
+     * @return El perfil del entrenador actualizado.
      */
     @Transactional
     public TrainerResponse updateMyProfile(TrainerUpdateRequest request, User currentUser) {

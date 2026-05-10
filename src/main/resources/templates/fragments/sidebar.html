@@ -11,7 +11,7 @@
 
     <a href="/dashboard" class="brand">
         <i class="bi bi-activity"></i>
-        TFG<span class="accent">Fit</span>App
+        Level<span class="accent">Up</span>
     </a>
 
     <ul class="nav flex-column mt-1" id="sidebar-nav">
@@ -33,32 +33,32 @@
             </a>
         </li>
 
-        <li class="nav-section" id="section-trainer">Gestión</li>
-        <li class="nav-item" id="nav-item-clients">
+        <li class="nav-section" id="section-trainer" style="display:none;">Gestión</li>
+        <li class="nav-item" id="nav-item-clients" style="display:none;">
             <a class="nav-link" href="/dashboard/clients" id="nav-clients">
                 <i class="bi bi-people-fill"></i> Clientes
             </a>
         </li>
-        <li class="nav-item" id="nav-item-diets">
+        <li class="nav-item" id="nav-item-diets" style="display:none;">
             <a class="nav-link" href="/dashboard/diets" id="nav-diets">
                 <i class="bi bi-egg-fried"></i> Dietas
             </a>
         </li>
-        <li class="nav-item" id="nav-item-workouts">
+        <li class="nav-item" id="nav-item-workouts" style="display:none;">
             <a class="nav-link" href="/dashboard/workouts" id="nav-workouts">
                 <i class="bi bi-lightning-charge-fill"></i> Entrenamientos
             </a>
         </li>
 
-        <li class="nav-section" id="section-client">Mi Actividad</li>
-        <li class="nav-item" id="nav-item-progress">
+        <li class="nav-section" id="section-client" style="display:none;">Mi Actividad</li>
+        <li class="nav-item" id="nav-item-progress" style="display:none;">
             <a class="nav-link" href="/dashboard/progress" id="nav-progress">
                 <i class="bi bi-graph-up-arrow"></i> Mi Progreso
             </a>
         </li>
 
-        <li class="nav-section" id="section-admin">Administración</li>
-        <li class="nav-item" id="nav-item-admin">
+        <li class="nav-section" id="section-admin" style="display:none;">Administración</li>
+        <li class="nav-item" id="nav-item-admin" style="display:none;">
             <a class="nav-link" href="/dashboard/admin" id="nav-admin">
                 <i class="bi bi-shield-fill-check"></i> Panel Admin
             </a>
@@ -66,13 +66,6 @@
     </ul>
 
     <div class="sidebar-footer">
-        <a href="/dashboard/profile" class="sidebar-user text-decoration-none">
-            <div class="sidebar-avatar" id="sidebar-avatar">?</div>
-            <div class="sidebar-user-info">
-                <div class="name" id="sidebar-user-name">Cargando...</div>
-                <div class="role" id="sidebar-user-role"></div>
-            </div>
-        </a>
         <button class="btn-logout" onclick="logout()">
             <i class="bi bi-box-arrow-left"></i> Cerrar sesión
         </button>
@@ -88,45 +81,44 @@
         });
 
         let user = getUser();
-        if (!user && typeof fetchCurrentUserProfile === 'function' && isLoggedIn()) {
+        
+        // Si no hay usuario o faltan datos clave, y hay token, intentamos cargarlo
+        const needsFetch = !user || !user.role || !user.name;
+        if (needsFetch && isLoggedIn()) {
             try {
                 user = await fetchCurrentUserProfile();
             } catch (e) {
-                console.error('No se pudo cargar el usuario del sidebar', e);
+                console.error('No se pudo cargar el perfil para el sidebar', e);
             }
         }
 
-        if (!user) return;
-
-        /* Nombre y avatar */
-        document.getElementById('sidebar-user-name').textContent = user.name || 'Usuario';
-        document.getElementById('sidebar-user-role').textContent =
-            user.role === 'TRAINER' ? 'Entrenador' :
-            user.role === 'CLIENT'  ? 'Cliente' : 'Administrador';
-        const initials = (user.name || '?').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
-        document.getElementById('sidebar-avatar').textContent = initials;
+        // Si después de todo no hay usuario, redirigimos si no está logueado
+        if (!user) {
+            if (!isLoggedIn()) window.location.href = '/login';
+            return;
+        }
 
         const hide = id => { const el = document.getElementById(id); if(el) el.style.display='none'; };
+        const show = id => { const el = document.getElementById(id); if(el) el.style.display='block'; };
 
         /* Ajustar visibilidad por rol */
+        hide('section-trainer'); hide('nav-item-clients'); hide('nav-item-diets'); hide('nav-item-workouts');
+        hide('section-client');  hide('nav-item-progress');
+        hide('section-admin');   hide('nav-item-admin');
+
         if (user.role === 'CLIENT') {
-            hide('section-trainer'); hide('nav-item-clients');
-            hide('nav-item-diets');  hide('nav-item-workouts');
-            hide('section-admin');   hide('nav-item-admin');
+            show('section-client');  show('nav-item-progress');
         } else if (user.role === 'TRAINER') {
-            hide('section-client');  hide('nav-item-progress');
-            hide('section-admin');   hide('nav-item-admin');
+            // Entrenadores ven su sección si tienen suscripción activa
+            if (user.subscriptionActive) {
+                show('section-trainer'); show('nav-item-clients');
+                show('nav-item-diets');  show('nav-item-workouts');
+            }
         } else if (user.role === 'ADMIN') {
-            hide('section-client');  hide('nav-item-progress');
-            hide('section-trainer'); hide('nav-item-clients');
-            hide('nav-item-diets');  hide('nav-item-workouts');
+            show('section-admin');   show('nav-item-admin');
         }
     }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSidebar);
-    } else {
-        initSidebar();
-    }
+    initSidebar();
 })();
 </script>
 </body>

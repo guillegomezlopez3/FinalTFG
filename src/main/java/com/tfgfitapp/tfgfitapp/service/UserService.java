@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Servicio para operaciones sobre el propio usuario autenticado.
- * Usado por el endpoint GET /api/me.
+ * Servicio para operaciones de gestión de cuenta del usuario actual.
+ * 
+ * Permite recuperar la información consolidada del perfil (incluyendo datos específicos
+ * de rol) y realizar cambios de seguridad como la actualización de contraseña.
  */
 @Service
 public class UserService {
@@ -33,8 +35,10 @@ public class UserService {
     }
 
     /**
-     * Devuelve el perfil completo del usuario autenticado,
-     * incluyendo datos de su perfil Trainer o Client si aplica.
+     * Obtiene la información del perfil completo del usuario autenticado.
+     * 
+     * @param currentUser Usuario actual.
+     * @return Perfil del usuario con datos extendidos según su rol.
      */
     @Transactional(readOnly = true)
     public UserProfileResponse getMyProfile(User currentUser) {
@@ -53,6 +57,7 @@ public class UserService {
                 response.setPhone(trainer.getPhone());
                 response.setSpecialty(trainer.getSpecialty());
                 response.setDescription(trainer.getDescription());
+                response.setSubscriptionActive(trainer.getSubscriptionActive());
             });
         } else if (currentUser.getRole() == Role.CLIENT) {
             clientRepository.findByUserId(currentUser.getId()).ifPresent(client -> {
@@ -69,7 +74,10 @@ public class UserService {
     }
 
     /**
-     * Cambia la contraseña del usuario autenticado.
+     * Actualiza la contraseña del usuario tras validar la actual.
+     * 
+     * @param currentUser Usuario actual.
+     * @param request Datos con la contraseña antigua y la nueva.
      */
     @Transactional
     public void changePassword(User currentUser, ChangePasswordRequest request) {

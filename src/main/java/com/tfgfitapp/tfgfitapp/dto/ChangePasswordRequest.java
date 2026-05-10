@@ -4,7 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO para la petición de cambio de contraseña.
+ * DTO para la solicitud de cambio de contraseña dentro de la sesión del usuario.
+ * 
+ * Requiere la contraseña actual por seguridad antes de establecer la nueva.
  */
 public class ChangePasswordRequest {
 

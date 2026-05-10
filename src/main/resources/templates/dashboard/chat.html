@@ -43,13 +43,9 @@
         .contact-item:hover, .contact-item.active {
             background: #e2e8f0;
         }
-        .contact-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .contact-avatar-container {
             margin-right: 15px;
-            object-fit: cover;
-            background: #cbd5e1;
+            flex-shrink: 0;
         }
         .contact-info {
             flex: 1;
@@ -189,7 +185,7 @@
 
             <div class="chat-main" id="chatMain">
                 <div class="empty-chat">
-                    <i class="fas fa-comments"></i>
+                    <i class="bi bi-chat-dots" style="font-size: 3rem; opacity: 0.5;"></i>
                     <h2>Selecciona un contacto</h2>
                     <p>Elige una conversación de la lista para empezar a chatear.</p>
                 </div>
@@ -237,10 +233,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     "CLIENT": "Cliente"
                 };
 
-                const avatarSrc = c.avatar || '/images/default-avatar.svg';
+                const avatarHtml = getAvatarHtml(c.name, c.avatar);
 
                 li.innerHTML = `
-                    <img src="${avatarSrc}" alt="${c.name}" class="contact-avatar" onerror="this.src='/images/default-avatar.svg'">
+                    <div class="contact-avatar-container">${avatarHtml}</div>
                     <div class="contact-info">
                         <div class="contact-name">${c.name}</div>
                         <div class="contact-role">${roleTranslate[c.role] || c.role}</div>
@@ -268,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <form class="chat-input" id="chatForm">
                 <input type="text" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" required>
-                <button type="submit" class="btn-send"><i class="fas fa-paper-plane"></i></button>
+                <button type="submit" class="btn-send"><i class="bi bi-send-fill"></i></button>
             </form>
         `;
 
@@ -286,10 +282,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadMessages() {
         if(!currentContactId) return;
 
-        fetch(`/api/chat/messages/${currentContactId}`, {
-            headers: { "Authorization": `Bearer ${token}` }
+        apiFetch(`/chat/messages/${currentContactId}`)
+        .then(async r => {
+            if (!r.ok) {
+                const err = await r.json().catch(() => ({}));
+                throw new Error(err.message || 'Error al cargar mensajes');
+            }
+            return r.json();
         })
-        .then(r => r.json())
         .then(messages => {
             const container = document.getElementById("chatMessages");
             if(!container) return;
@@ -329,19 +329,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         input.value = '';
 
-        fetch('/api/chat/messages', {
+        apiFetch('/chat/messages', {
             method: 'POST',
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
             body: JSON.stringify({ receiverId: currentContactId, content: content })
         })
-        .then(r => r.json())
+        .then(async r => {
+            if (!r.ok) {
+                const err = await r.json().catch(() => ({}));
+                throw new Error(err.message || 'Error al enviar el mensaje');
+            }
+            return r.json();
+        })
         .then(() => {
             loadMessages();
-            const container = document.getElementById("chatMessages");
-            if(container) container.scrollTop = container.scrollHeight;
+        })
+        .catch(err => {
+            console.error(err);
+            alert(err.message);
+            // Restaurar el texto si falló
+            input.value = content;
         });
     }
 });

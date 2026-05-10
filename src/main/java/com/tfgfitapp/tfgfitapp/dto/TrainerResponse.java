@@ -3,8 +3,7 @@ package com.tfgfitapp.tfgfitapp.dto;
 import java.time.LocalDateTime;
 
 /**
- * DTO de respuesta para un entrenador.
- * Incluye datos del User asociado y numero de clientes asignados.
+ * DTO de respuesta que contiene la información pública y profesional de un entrenador.
  */
 public class TrainerResponse {
 

@@ -20,12 +20,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de gestión de registros de progreso.
- *
- * Control de acceso:
- * - CLIENT: crea y consulta sus propios registros.
- * - TRAINER: consulta registros de sus clientes.
- * - ADMIN: acceso completo.
+ * Servicio para la gestión de Registros de Progreso antropométrico.
+ * 
+ * Proporciona lógica para registrar medidas corporales de los clientes,
+ * realizar el seguimiento histórico y gestionar el acceso a dichos datos por roles.
  */
 @Service
 public class ProgressRecordService {
@@ -42,12 +40,29 @@ public class ProgressRecordService {
     private final TrainerRepository trainerRepository;
 
     /**
-     * CLIENT crea un registro de progreso para sí mismo.
+     * Crea un nuevo registro de medidas físicas para el cliente autenticado.
+     * 
+     * @param request Datos antropométricos.
+     * @param currentUser Cliente que realiza el registro.
+     * @return Respuesta con los datos del registro guardado.
      */
     @Transactional
     public ProgressRecordResponse createRecord(ProgressRecordRequest request, User currentUser) {
-        Client client = clientRepository.findByUserId(currentUser.getId())
+        Client client;
+        
+        // Si el usuario es TRAINER o ADMIN y especifica un clientId
+        if (request.getClientId() != null && (currentUser.getRole() == Role.TRAINER || currentUser.getRole() == Role.ADMIN)) {
+            client = getClientOrThrow(request.getClientId());
+            checkReadAccess(client, currentUser); // Verifica que el trainer tiene acceso a este cliente
+        } else if (currentUser.getRole() == Role.CLIENT) {
+            // Si quieres prohibir totalmente que el cliente lo ponga, descomenta la siguiente línea:
+            // throw new AccessDeniedException("Solo tu entrenador puede registrar tu progreso");
+            
+            client = clientRepository.findByUserId(currentUser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil de cliente no encontrado"));
+        } else {
+            throw new IllegalArgumentException("Debes especificar un ID de cliente válido");
+        }
 
         ProgressRecord record = new ProgressRecord();
         record.setClient(client);
@@ -65,7 +80,11 @@ public class ProgressRecordService {
     }
 
     /**
-     * Obtiene todos los registros de un cliente con control de acceso.
+     * Obtiene el historial de registros de progreso de un cliente específico.
+     * 
+     * @param clientId ID del cliente.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return Lista de respuestas con el progreso cronológico.
      */
     @Transactional(readOnly = true)
     public List<ProgressRecordResponse> getRecordsByClient(Long clientId, User currentUser) {

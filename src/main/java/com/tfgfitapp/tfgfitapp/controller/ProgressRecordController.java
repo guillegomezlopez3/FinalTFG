@@ -15,14 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * Controlador de registros de progreso físico.
- *
- * Endpoints:
- * - POST   /api/progress              → CLIENT: crea su propio registro
- * - GET    /api/progress/me           → CLIENT: obtiene sus propios registros
- * - GET    /api/progress/client/{id}  → TRAINER (propio) / ADMIN
- * - GET    /api/progress/{id}         → CLIENT (suyo) / TRAINER (propio) / ADMIN
- * - DELETE /api/progress/{id}         → CLIENT (suyo) / ADMIN
+ * Controlador para la gestión de Registros de Progreso físico.
+ * 
+ * Permite a los clientes consultar sus propias medidas corporales,
+ * y a los entrenadores registrar y visualizar la evolución de sus clientes asignados.
  */
 @RestController
 @RequestMapping("/api/progress")
@@ -35,11 +31,14 @@ public class ProgressRecordController {
     private final ProgressRecordService progressRecordService;
 
     /**
-     * POST /api/progress
-     * El cliente autenticado registra sus propias medidas del día.
+     * Crea un nuevo registro de progreso.
+     * 
+     * @param request Datos de las medidas físicas.
+     * @param currentUser Usuario autenticado.
+     * @return 201 Created con el registro de progreso guardado.
      */
     @PostMapping
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'TRAINER', 'ADMIN')")
     public ResponseEntity<ProgressRecordResponse> createRecord(
             @Valid @RequestBody ProgressRecordRequest request,
             @AuthenticationPrincipal User currentUser) {
@@ -48,8 +47,10 @@ public class ProgressRecordController {
     }
 
     /**
-     * GET /api/progress/me
-     * El cliente obtiene su propio historial de progreso (más reciente primero).
+     * Obtiene todos los registros de progreso del cliente autenticado.
+     * 
+     * @param currentUser Cliente autenticado.
+     * @return Lista de registros ordenados por fecha.
      */
     @GetMapping("/me")
     @PreAuthorize("hasRole('CLIENT')")
@@ -59,8 +60,11 @@ public class ProgressRecordController {
     }
 
     /**
-     * GET /api/progress/client/{clientId}
-     * El entrenador o admin consulta el historial de un cliente específico.
+     * Obtiene los registros de progreso de un cliente específico.
+     * 
+     * @param clientId Identificador del cliente.
+     * @param currentUser Usuario que realiza la consulta (entrenador o administrador).
+     * @return Lista de registros del cliente.
      */
     @GetMapping("/client/{clientId}")
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
@@ -71,8 +75,11 @@ public class ProgressRecordController {
     }
 
     /**
-     * GET /api/progress/{id}
-     * Obtiene un registro concreto con control de acceso.
+     * Obtiene un registro de progreso específico por su ID.
+     * 
+     * @param id Identificador del registro.
+     * @param currentUser Usuario que realiza la consulta.
+     * @return El registro encontrado.
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENT', 'TRAINER', 'ADMIN')")
@@ -83,11 +90,14 @@ public class ProgressRecordController {
     }
 
     /**
-     * DELETE /api/progress/{id}
-     * El cliente elimina su propio registro. El admin puede eliminar cualquiera.
+     * Elimina un registro de progreso.
+     * 
+     * @param id Identificador del registro.
+     * @param currentUser Usuario que realiza la eliminación.
+     * @return 204 No Content.
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENT', 'ADMIN', 'TRAINER')")
     public ResponseEntity<Void> deleteRecord(
             @PathVariable Long id,
             @AuthenticationPrincipal User currentUser) {
@@ -95,4 +105,3 @@ public class ProgressRecordController {
         return ResponseEntity.noContent().build();
     }
 }
-

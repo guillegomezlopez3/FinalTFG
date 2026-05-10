@@ -9,16 +9,16 @@
 <main class="main-content">
     <div class="topbar fade-in-up">
         <div class="topbar-left">
-            <h4>Dietas</h4>
-            <p>Gestiona los planes de nutrición de tus clientes</p>
+            <h4 id="page-title">Dietas</h4>
+            <p id="page-desc">Gestiona los planes de nutrición de tus clientes</p>
         </div>
         <button class="btn-orange" id="btn-new-diet" onclick="openNewDiet()">
             <i class="bi bi-plus-lg"></i> Nueva dieta
         </button>
     </div>
 
-    <!-- FILTRO POR CLIENTE -->
-    <div class="card mb-3 fade-in-up">
+    <!-- FILTRO POR CLIENTE (Oculto para clientes) -->
+    <div class="card mb-3 fade-in-up" id="filters-container">
         <div class="card-body-p py-3">
             <div class="row g-2 align-items-end">
                 <div class="col-sm-5 col-md-4">
@@ -108,9 +108,12 @@ let myClients = [];
 document.addEventListener('DOMContentLoaded', async () => {
     dietModalBs  = new bootstrap.Modal(document.getElementById('dietModal'));
 
-    /* Ocultar botón nueva dieta para CLIENT */
+    /* Ajustes según rol */
     if (user && user.role === 'CLIENT') {
         document.getElementById('btn-new-diet').style.display = 'none';
+        document.getElementById('filters-container').style.display = 'none';
+        document.getElementById('page-title').textContent = 'Mi Nutrición';
+        document.getElementById('page-desc').textContent = 'Consulta tus planes de alimentación personalizados';
     }
 
     await loadMyClients();
@@ -205,8 +208,9 @@ function dietCard(d) {
                 </div>
             </div>
             <div class="border-top px-3 py-2">
-                <button class="btn btn-sm btn-outline-orange w-100" onclick="window.location.href='/dashboard/diet-builder?dietId=${d.id}'">
-                    <i class="bi bi-list-ul me-1"></i> Ver comidas (${(d.meals||[]).length})
+                <button class="btn btn-sm btn-outline-orange w-100" 
+                        onclick="window.location.href='${user.role === 'CLIENT' ? '/dashboard/diet-view' : '/dashboard/diet-builder'}?dietId=${d.id}'">
+                    <i class="bi bi-list-ul me-1"></i> ${user.role === 'CLIENT' ? 'Ver Mi Dieta' : 'Ver comidas (' + (d.meals||[]).length + ')'}
                 </button>
             </div>
         </div>

@@ -1,5 +1,8 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
+/**
+ * DTO para la actualización de la imagen de perfil (avatar) del usuario.
+ */
 public class AvatarRequest {
     private String avatar;
 

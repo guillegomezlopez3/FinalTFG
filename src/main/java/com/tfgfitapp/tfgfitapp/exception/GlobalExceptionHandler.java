@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Manejador global de excepciones adaptado a ProblemDetail (RFC 7807) en Spring
- * Boot 3.
+ * Capturador global de excepciones para toda la aplicación.
+ * 
+ * Transforma las excepciones lanzadas por los controladores y servicios en 
+ * respuestas estructuradas siguiendo el estándar {@link ProblemDetail} (RFC 7807).
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {

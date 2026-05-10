@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 
 import java.time.Instant;
 
+/**
+ * Entidad que representa un token para el restablecimiento de contraseña.
+ */
 @Entity
 @Table(name = "password_reset_tokens")
 public class PasswordResetToken {

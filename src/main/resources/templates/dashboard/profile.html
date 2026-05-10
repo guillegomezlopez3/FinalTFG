@@ -141,8 +141,8 @@ async function loadProfile() {
         const data = await res.json();
 
         /* Avatar */
-        const initials = (data.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-        document.getElementById('profile-avatar').textContent = initials;
+        document.getElementById('profile-avatar').innerHTML = getAvatarHtml(data.name, data.avatar, 'xl');
+        document.getElementById('profile-avatar').style.background = 'none'; // Quitar el gradiente manual para usar el dinámico
         document.getElementById('profile-name').textContent   = data.name || '—';
         document.getElementById('profile-email').textContent  = data.email || '';
 

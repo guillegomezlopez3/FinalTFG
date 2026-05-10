@@ -3,6 +3,9 @@ package com.tfgfitapp.tfgfitapp.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Entidad que representa un token de refresco para la sesión JWT.
+ */
 @Entity
 @Table(name = "refresh_tokens")
 public class RefreshToken {

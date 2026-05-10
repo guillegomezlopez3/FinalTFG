@@ -9,8 +9,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Repositorio JPA para la entidad {@link com.tfgfitapp.tfgfitapp.entity.RefreshToken}.
+ * 
+ * Gestiona el almacenamiento y eliminación de los tokens de refresco de sesión.
+ */
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
+    /**
+     * Busca un token de refresco por su valor.
+     * 
+     * @param token Valor del token.
+     * @return El objeto RefreshToken si existe.
+     */
     Optional<RefreshToken> findByToken(String token);
 
     @Modifying

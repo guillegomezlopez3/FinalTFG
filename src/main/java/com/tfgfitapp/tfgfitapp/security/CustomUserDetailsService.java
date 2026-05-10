@@ -23,6 +23,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    /**
+     * Recupera los detalles de un usuario a partir de su correo electrónico.
+     * 
+     * @param email Correo electrónico del usuario.
+     * @return Detalles del usuario encontrado.
+     * @throws UsernameNotFoundException Si no existe ningún usuario con ese email.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)

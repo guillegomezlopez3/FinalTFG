@@ -15,12 +15,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Panel de administracion. Todos los endpoints requieren rol ADMIN.
- *
- * - GET  /api/admin/stats              → estadisticas globales del sistema
- * - GET  /api/admin/trainers           → lista paginada de entrenadores
- * - GET  /api/admin/clients            → lista paginada de clientes
- * - PUT  /api/admin/users/{id}/active  → activa / desactiva un usuario
+ * Controlador para la gestión administrativa del sistema.
+ * 
+ * Este controlador proporciona endpoints protegidos exclusivamente para usuarios con el rol ADMIN.
+ * Permite visualizar estadísticas globales, gestionar la lista de entrenadores y clientes,
+ * y activar o desactivar usuarios.
  */
 @RestController
 @RequestMapping("/api/admin")
@@ -36,8 +35,9 @@ public class AdminController {
     private final TrainerService trainerService;
 
     /**
-     * GET /api/admin/stats
-     * Totales de usuarios, trainers, clientes, dietas activas, etc.
+     * Obtiene las estadísticas generales del sistema.
+     * 
+     * @return 200 OK con el desglose de totales (usuarios, entrenadores, clientes, etc.).
      */
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsResponse> getStats() {
@@ -45,7 +45,10 @@ public class AdminController {
     }
 
     /**
-     * GET /api/admin/trainers?page=0&size=10&sort=createdAt,desc
+     * Obtiene una lista paginada de todos los entrenadores registrados.
+     * 
+     * @param pageable Parámetros de paginación (page, size, sort).
+     * @return 200 OK con la página de entrenadores.
      */
     @GetMapping("/trainers")
     public ResponseEntity<PageResponse<TrainerResponse>> getAllTrainers(
@@ -54,7 +57,10 @@ public class AdminController {
     }
 
     /**
-     * GET /api/admin/clients?page=0&size=10
+     * Obtiene una lista paginada de todos los clientes registrados.
+     * 
+     * @param pageable Parámetros de paginación (page, size, sort).
+     * @return 200 OK con la página de clientes.
      */
     @GetMapping("/clients")
     public ResponseEntity<PageResponse<ClientResponse>> getAllClients(
@@ -63,8 +69,10 @@ public class AdminController {
     }
 
     /**
-     * PUT /api/admin/users/{id}/active
-     * Alterna el estado activo/inactivo de un usuario sin eliminarlo.
+     * Alterna el estado de activación de un usuario.
+     * 
+     * @param id Identificador único del usuario.
+     * @return 204 No Content si la operación se realiza con éxito.
      */
     @PutMapping("/users/{id}/active")
     public ResponseEntity<Void> toggleUserActive(@PathVariable Long id) {
@@ -72,4 +80,3 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 }
-

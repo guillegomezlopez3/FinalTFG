@@ -1,7 +1,7 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
 /**
- * DTO de respuesta para un ejercicio de un día de entrenamiento.
+ * DTO de respuesta con los detalles de un ejercicio prescrito.
  */
 public class ExerciseResponse {
 
@@ -15,6 +15,8 @@ public class ExerciseResponse {
     private Integer restSeconds;
     private Integer durationMinutes;
     private String notes;
+    private String gifUrl;
+    private Long predefinedExerciseId;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -32,5 +34,9 @@ public class ExerciseResponse {
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getGifUrl() { return gifUrl; }
+    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    public Long getPredefinedExerciseId() { return predefinedExerciseId; }
+    public void setPredefinedExerciseId(Long predefinedExerciseId) { this.predefinedExerciseId = predefinedExerciseId; }
 }
 

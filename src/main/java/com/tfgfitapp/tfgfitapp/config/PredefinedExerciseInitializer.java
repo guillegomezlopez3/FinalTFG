@@ -14,9 +14,20 @@ import org.springframework.core.annotation.Order;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Inicializador del catálogo de ejercicios predefinidos.
+ * 
+ * Se encarga de poblar la base de datos con una lista inicial de ejercicios
+ * categorizados por grupos musculares y equipamiento si la tabla está vacía.
+ */
 @Configuration
 public class PredefinedExerciseInitializer {
 
+    /**
+     * Constructor de la clase.
+     * 
+     * @param repository Repositorio de ejercicios predefinidos.
+     */
     public PredefinedExerciseInitializer(PredefinedExerciseRepository repository) {
         this.repository = repository;
     }
@@ -24,6 +35,11 @@ public class PredefinedExerciseInitializer {
     private static final Logger log = LoggerFactory.getLogger(PredefinedExerciseInitializer.class);
     private final PredefinedExerciseRepository repository;
 
+    /**
+     * Define un CommandLineRunner que se ejecuta al iniciar el contexto de Spring.
+     * 
+     * @return Tarea de inicialización del catálogo de ejercicios.
+     */
     @Bean
     @Order(2)
     public CommandLineRunner initPredefinedExercises() {

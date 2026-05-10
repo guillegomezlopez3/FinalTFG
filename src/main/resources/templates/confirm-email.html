@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Confirmar Email')}"/>
+</head>
+<body>
+<div class="auth-wrapper d-flex justify-content-center align-items-center" style="min-height: 100vh; background: #f8f9fa;">
+    <div class="card shadow-lg border-0" style="max-width: 500px; width: 100%; border-radius: 1rem;">
+        <div class="card-body p-5 text-center fade-in-up">
+            
+            <div th:if="${param.success != null}">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h2 class="mt-4 mb-3">¡Email confirmado!</h2>
+                <p class="text-muted mb-4">Tu cuenta ha sido activada correctamente. Ya puedes acceder a tu panel de control.</p>
+                <a href="/login" class="btn btn-primary px-4 py-2" style="background: var(--orange); border: none; font-weight: 600;">Ir al Login</a>
+            </div>
+
+            <div th:if="${param.error != null}">
+                <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                <h2 class="mt-4 mb-3">Enlace no válido</h2>
+                <p class="text-muted mb-4">El enlace de confirmación es inválido o ha expirado. Por favor, contacta con tu entrenador para que te vuelva a enviar el acceso.</p>
+                <a href="/" class="btn btn-outline-secondary px-4 py-2" style="font-weight: 600;">Volver al inicio</a>
+            </div>
+
+            <div th:if="${param.success == null and param.error == null}">
+                <i class="bi bi-question-circle-fill text-secondary" style="font-size: 4rem;"></i>
+                <h2 class="mt-4 mb-3">Petición inválida</h2>
+                <p class="text-muted mb-4">No se ha encontrado ningún token de confirmación en la URL.</p>
+                <a href="/" class="btn btn-outline-secondary px-4 py-2" style="font-weight: 600;">Volver al inicio</a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+</body>
+</html>

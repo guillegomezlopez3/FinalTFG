@@ -2,6 +2,11 @@ package com.tfgfitapp.tfgfitapp.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * DTO para completar el restablecimiento de la contraseña utilizando un token.
+ * 
+ * Contiene el token de validación y la nueva contraseña deseada por el usuario.
+ */
 public class ResetPasswordRequest {
     @NotBlank(message = "Token es requerido")
     private String token;

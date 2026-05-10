@@ -15,7 +15,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Controlador de gestion de planes de entrenamiento, dias y ejercicios.
+ * Controlador para la gestión de Planes de Entrenamiento.
+ * 
+ * Gestiona la jerarquía completa de entrenamientos: Planes, Días de entrenamiento
+ * y Ejercicios individuales dentro de cada día.
  */
 @RestController
 @RequestMapping("/api/workout-plans")
@@ -29,6 +32,13 @@ public class WorkoutPlanController {
 
     // ===== PLANES =====
 
+    /**
+     * Crea un nuevo plan de entrenamiento para un cliente.
+     * 
+     * @param request Datos del plan.
+     * @param currentUser Usuario que crea el plan (entrenador).
+     * @return 201 Created con el plan creado.
+     */
     @PostMapping
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
     public ResponseEntity<WorkoutPlanResponse> createPlan(
@@ -39,8 +49,13 @@ public class WorkoutPlanController {
     }
 
     /**
-     * GET /api/workout-plans/client/{clientId}?active=true&page=0&size=10
-     * Parametro active es opcional.
+     * Obtiene los planes de entrenamiento de un cliente, permitiendo filtrar por estado.
+     * 
+     * @param clientId ID del cliente.
+     * @param active Opcional: filtrar solo planes activos o inactivos.
+     * @param pageable Parámetros de paginación.
+     * @param currentUser Usuario que consulta.
+     * @return Página de planes de entrenamiento.
      */
     @GetMapping("/client/{clientId}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
@@ -52,6 +67,13 @@ public class WorkoutPlanController {
         return ResponseEntity.ok(workoutPlanService.getPlansByClient(clientId, active, pageable, currentUser));
     }
 
+    /**
+     * Obtiene un plan de entrenamiento específico por su ID.
+     * 
+     * @param id ID del plan.
+     * @param currentUser Usuario que consulta.
+     * @return El plan detallado (incluyendo días y ejercicios).
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
     public ResponseEntity<WorkoutPlanResponse> getPlanById(
@@ -69,6 +91,13 @@ public class WorkoutPlanController {
         return ResponseEntity.ok(workoutPlanService.updatePlan(id, request, currentUser));
     }
 
+    /**
+     * Elimina un plan de entrenamiento completo.
+     * 
+     * @param id ID del plan.
+     * @param currentUser Usuario que realiza la eliminación.
+     * @return 204 No Content.
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
     public ResponseEntity<Void> deletePlan(

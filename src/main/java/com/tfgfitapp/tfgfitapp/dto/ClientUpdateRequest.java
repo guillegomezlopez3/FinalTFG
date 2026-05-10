@@ -5,9 +5,10 @@ import com.tfgfitapp.tfgfitapp.enumeration.ClientLevel;
 import java.math.BigDecimal;
 
 /**
- * DTO para actualizar el perfil de un cliente.
- * El trainer y el user no se modifican desde aquí.
- * Todos los campos son opcionales (se actualizan solo los no nulos).
+ * DTO para la actualización de la información del perfil de un cliente.
+ * 
+ * Permite modificar datos antropométricos y de salud. Los campos son opcionales
+ * y solo se procesan aquellos que no sean nulos.
  */
 public class ClientUpdateRequest {
 

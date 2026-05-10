@@ -31,10 +31,23 @@ public class JwtService {
 
     // ===== GENERACIÓN =====
 
+    /**
+     * Genera un token JWT simple para un usuario.
+     * 
+     * @param userDetails Detalles del usuario autenticado.
+     * @return Cadena del token JWT.
+     */
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
 
+    /**
+     * Genera un token JWT incluyendo claims adicionales personalizados.
+     * 
+     * @param extraClaims Mapa de claims extra para incluir en el payload.
+     * @param userDetails Detalles del usuario autenticado.
+     * @return Cadena del token JWT.
+     */
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .claims(extraClaims)
@@ -47,6 +60,13 @@ public class JwtService {
 
     // ===== VALIDACIÓN =====
 
+    /**
+     * Valida si un token pertenece al usuario y no ha expirado.
+     * 
+     * @param token Token JWT a validar.
+     * @param userDetails Detalles del usuario contra los que validar.
+     * @return true si es válido, false en caso contrario.
+     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
@@ -58,6 +78,12 @@ public class JwtService {
 
     // ===== EXTRACCIÓN DE CLAIMS =====
 
+    /**
+     * Extrae el nombre de usuario (subject) contenido en el token.
+     * 
+     * @param token Token JWT.
+     * @return El email del usuario.
+     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -66,6 +92,14 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    /**
+     * Extrae un claim específico utilizando un resolver de claims.
+     * 
+     * @param <T> Tipo del dato a extraer.
+     * @param token Token JWT.
+     * @param claimsResolver Función para extraer el dato deseado.
+     * @return El valor del claim extraído.
+     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);

@@ -2,6 +2,11 @@ package com.tfgfitapp.tfgfitapp.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO para la representación de un mensaje de chat entre usuarios.
+ * 
+ * Contiene el contenido del mensaje, remitente, destinatario y marca temporal.
+ */
 public class MessageDto {
 
     public MessageDto() {}

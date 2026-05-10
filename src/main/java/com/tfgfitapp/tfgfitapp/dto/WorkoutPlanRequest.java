@@ -6,8 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 /**
- * DTO para crear o actualizar un plan de entrenamiento.
- * El trainer se obtiene del usuario autenticado.
+ * DTO para la creación o actualización de un plan de entrenamiento completo.
+ * 
+ * Contiene la información de cabecera del plan, vinculando al cliente con sus objetivos.
  */
 public class WorkoutPlanRequest {
 

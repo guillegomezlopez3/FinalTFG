@@ -13,6 +13,12 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Servicio para la gestión del restablecimiento de contraseñas.
+ * 
+ * Genera tokens únicos de un solo uso y tiempo limitado para permitir a los usuarios
+ * recuperar el acceso a sus cuentas mediante el cambio de contraseña.
+ */
 @Service
 public class PasswordResetService {
 
@@ -30,6 +36,12 @@ public class PasswordResetService {
     // Token caduca en 1 hora
     private final Long EXPIRATION_MS = 3600000L;
 
+    /**
+     * Crea un token de restablecimiento para el email proporcionado.
+     * 
+     * @param email Correo electrónico del usuario.
+     * @return El token generado (UUID).
+     */
     @Transactional
     public String createPasswordResetTokenForUser(String email) {
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -55,6 +67,12 @@ public class PasswordResetService {
         return token; // En un escenario real, esto se enviaría por email
     }
 
+    /**
+     * Valida el token y actualiza la contraseña del usuario asociado.
+     * 
+     * @param token Valor del token de restablecimiento.
+     * @param newPassword Nueva contraseña en texto plano.
+     */
     @Transactional
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = tokenRepository.findByToken(token)

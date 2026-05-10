@@ -177,8 +177,8 @@
                             <input type="email" id="new-email" class="form-control" required/>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Contraseña *</label>
-                            <input type="password" id="new-password" class="form-control" minlength="6" required/>
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" id="new-password" class="form-control" minlength="6" placeholder="Opcional (por defecto: lvlupRtg)"/>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Nivel</label>
@@ -231,6 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btn-new-client').style.display = 'block';
     }
 
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+        finalizeClientCreation();
+    }
+
     loadClients();
     document.getElementById('filter-level').addEventListener('change', () => { currentPage = 0; loadClients(); });
     document.getElementById('filter-active').addEventListener('change', () => { currentPage = 0; loadClients(); });
@@ -274,9 +279,7 @@ async function loadClients() {
         <tr>
             <td>
                 <div class="d-flex align-items-center gap-2">
-                    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0;">
-                        ${(c.userName || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-                    </div>
+                    ${getAvatarHtml(c.userName, null, 'sm')}
                     <div>
                         <div style="font-weight:600;font-size:.9rem;">${c.userName || '—'}</div>
                         <div style="font-size:.78rem;color:var(--text-muted);">${c.userEmail || ''}</div>
@@ -292,6 +295,9 @@ async function loadClients() {
                 <div class="d-flex gap-1">
                     <button class="btn btn-sm btn-outline-primary" onclick="openEdit(${JSON.stringify(c).replace(/"/g,'&quot;')})" title="Editar">
                         <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-orange" onclick="window.location.href='/dashboard/progress?clientId=${c.id}'" title="Ver Progreso">
+                        <i class="bi bi-graph-up-arrow"></i>
                     </button>
                     ${user.role === 'TRAINER' || user.role === 'ADMIN' ?
                     `<button class="btn btn-sm btn-outline-danger" onclick="deleteClient(${c.id})" title="Desactivar">
@@ -397,16 +403,43 @@ async function createClient() {
     };
 
     try {
+        const btn = document.querySelector('button[onclick="createClient()"]');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Redirigiendo al pago...';
+
+        // Guardar datos temporalmente para crear el cliente tras el pago
+        sessionStorage.setItem('pending_client', JSON.stringify(body));
+        
+        // Redirigir directamente al Payment Link de Stripe
+        window.location.href = "https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01";
+    } catch(e) {
+        showAlert(document.getElementById('new-client-alert'), 'Error al iniciar el proceso de pago');
+        const btn = document.querySelector('button[onclick="createClient()"]');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Crear cliente';
+    }
+}
+
+// Función para finalizar la creación tras el pago exitoso
+async function finalizeClientCreation() {
+    const pendingData = sessionStorage.getItem('pending_client');
+    if (!pendingData) return;
+
+    try {
+        const body = JSON.parse(pendingData);
         const res = await apiFetch(`/clients`, { method:'POST', body: JSON.stringify(body) });
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.message || 'Error al crear el cliente');
+            throw new Error(err.message || 'Error al crear el cliente tras el pago');
         }
-        newClientModal.hide();
+        
+        sessionStorage.removeItem('pending_client');
+        successToast('¡Pago completado y cliente creado correctamente!');
         currentPage = 0;
         loadClients();
     } catch(e) {
-        showAlert(document.getElementById('new-client-alert'), e.message);
+        console.error('Error finalizando la creación:', e);
+        Swal.fire('Atención', 'Se ha procesado el pago pero hubo un error al registrar los datos del cliente. Por favor, contacta con soporte.', 'warning');
     }
 }
 

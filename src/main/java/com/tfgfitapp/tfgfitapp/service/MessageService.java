@@ -19,11 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para la gestión de la mensajería interna (Chat).
+ * 
+ * Controla la lista de contactos permitidos según el rol del usuario,
+ * gestiona el envío de mensajes y recupera el historial de conversaciones.
+ */
 @Service
 public class MessageService {
 
     public MessageService(MessageRepository messageRepository, UserRepository userRepository,
-                          ClientRepository clientRepository, TrainerRepository trainerRepository) {
+            ClientRepository clientRepository, TrainerRepository trainerRepository) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.clientRepository = clientRepository;
@@ -35,6 +41,12 @@ public class MessageService {
     private final ClientRepository clientRepository;
     private final TrainerRepository trainerRepository;
 
+    /**
+     * Obtiene la lista de contactos con los que el usuario tiene permitido comunicarse.
+     * 
+     * @param currentUser Usuario autenticado.
+     * @return Lista de perfiles de contactos (Entrenadores/Clientes/Admins).
+     */
     @Transactional(readOnly = true)
     public List<UserProfileResponse> getAllowedContacts(User currentUser) {
         final List<User> contacts = new ArrayList<>();
@@ -67,7 +79,6 @@ public class MessageService {
             });
         }
 
-
         return contacts.stream()
                 .filter(User::getActive)
                 .map(this::mapToProfileResponse)
@@ -84,6 +95,13 @@ public class MessageService {
         return response;
     }
 
+    /**
+     * Recupera el historial de mensajes entre dos usuarios.
+     * 
+     * @param currentUser Usuario autenticado.
+     * @param otherUserId ID del otro participante en la conversación.
+     * @return Lista de mensajes ordenados cronológicamente.
+     */
     @Transactional(readOnly = true)
     public List<MessageDto> getConversation(User currentUser, Long otherUserId) {
         User otherUser = userRepository.findById(otherUserId)
@@ -95,6 +113,13 @@ public class MessageService {
         return messages.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
+    /**
+     * Envía un nuevo mensaje a un destinatario específico.
+     * 
+     * @param currentUser Usuario remitente.
+     * @param request Datos del mensaje (destinatario y contenido).
+     * @return El mensaje enviado en formato DTO.
+     */
     @Transactional
     public MessageDto sendMessage(User currentUser, SendMessageRequest request) {
         User receiver = userRepository.findById(request.getReceiverId())
@@ -121,22 +146,24 @@ public class MessageService {
             boolean isMyClient = clientRepository.findByUserId(otherUser.getId())
                     .map(c -> c.getTrainer() != null && c.getTrainer().getUser().getId().equals(currentUser.getId()))
                     .orElse(false);
-            if (!isMyClient) throw new IllegalArgumentException("No puedes chatear con este cliente");
+            if (!isMyClient)
+                throw new IllegalArgumentException("No puedes chatear con este cliente");
         }
 
         if (currentUser.getRole() == Role.CLIENT && otherUser.getRole() == Role.TRAINER) {
             boolean isMyTrainer = clientRepository.findByUserId(currentUser.getId())
                     .map(c -> c.getTrainer() != null && c.getTrainer().getUser().getId().equals(otherUser.getId()))
                     .orElse(false);
-            if (!isMyTrainer) throw new IllegalArgumentException("No puedes chatear con este entrenador");
+            if (!isMyTrainer)
+                throw new IllegalArgumentException("No puedes chatear con este entrenador");
         }
 
         if (currentUser.getRole() == Role.CLIENT && otherUser.getRole() == Role.CLIENT) {
-           throw new IllegalArgumentException("Los clientes no pueden chatear entre sí");
+            throw new IllegalArgumentException("Los clientes no pueden chatear entre sí");
         }
 
         if (currentUser.getRole() == Role.TRAINER && otherUser.getRole() == Role.TRAINER) {
-           throw new IllegalArgumentException("Los entrenadores no pueden chatear entre sí");
+            throw new IllegalArgumentException("Los entrenadores no pueden chatear entre sí");
         }
     }
 

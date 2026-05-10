@@ -9,16 +9,16 @@
 <main class="main-content">
     <div class="topbar fade-in-up">
         <div class="topbar-left">
-            <h4>Planes de entrenamiento</h4>
-            <p>Diseña y gestiona las rutinas de tus clientes</p>
+            <h4 id="page-title">Planes de entrenamiento</h4>
+            <p id="page-desc">Diseña y gestiona las rutinas de tus clientes</p>
         </div>
         <button class="btn-orange" id="btn-new-plan" onclick="openNewPlan()">
             <i class="bi bi-plus-lg"></i> Nuevo plan
         </button>
     </div>
 
-    <!-- FILTROS -->
-    <div class="card mb-3 fade-in-up">
+    <!-- FILTROS (Ocultos para clientes) -->
+    <div class="card mb-3 fade-in-up" id="filters-container">
         <div class="card-body-p py-3">
             <div class="row g-2 align-items-end">
                 <div class="col-sm-5 col-md-4">
@@ -115,6 +115,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (user && user.role === 'CLIENT') {
         document.getElementById('btn-new-plan').style.display = 'none';
+        document.getElementById('filters-container').style.display = 'none';
+        document.getElementById('page-title').textContent = 'Mis Entrenamientos';
+        document.getElementById('page-desc').textContent = 'Consulta y realiza tus rutinas de ejercicios';
     }
 
     await loadMyClients();
@@ -207,8 +210,9 @@ function planCard(p) {
                 </div>
             </div>
             <div class="border-top px-3 py-2">
-                <button class="btn btn-sm btn-outline-orange w-100" onclick="window.location.href='/dashboard/workout-builder?planId=${p.id}'">
-                    <i class="bi bi-calendar3 me-1"></i> Ver días y ejercicios (${days.length})
+                <button class="btn btn-sm btn-outline-orange w-100" 
+                        onclick="window.location.href='${user.role === 'CLIENT' ? '/dashboard/workout-view' : '/dashboard/workout-builder'}?planId=${p.id}'">
+                    <i class="bi bi-calendar3 me-1"></i> ${user.role === 'CLIENT' ? 'Empezar Entrenamiento' : 'Ver días y ejercicios (' + days.length + ')'}
                 </button>
             </div>
         </div>

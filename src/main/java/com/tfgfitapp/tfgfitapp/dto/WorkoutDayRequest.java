@@ -4,7 +4,7 @@ import com.tfgfitapp.tfgfitapp.enumeration.DayOfWeekPlan;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * DTO para crear o actualizar un día dentro de un plan de entrenamiento.
+ * DTO para definir un día de entrenamiento específico dentro de un plan.
  */
 public class WorkoutDayRequest {
 

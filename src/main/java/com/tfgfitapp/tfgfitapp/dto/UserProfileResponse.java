@@ -5,9 +5,10 @@ import com.tfgfitapp.tfgfitapp.enumeration.Role;
 import java.time.LocalDateTime;
 
 /**
- * DTO de respuesta para el endpoint GET /api/me.
- * Devuelve los datos del usuario autenticado junto con
- * datos de su perfil (trainer o client) si corresponde.
+ * DTO de respuesta que consolida la información del perfil del usuario.
+ * 
+ * Incluye datos generales de la cuenta y campos específicos extendidos
+ * dependiendo de si el usuario es un Entrenador o un Cliente.
  */
 public class UserProfileResponse {
 
@@ -26,6 +27,7 @@ public class UserProfileResponse {
     private String phone;
     private String specialty;
     private String description;
+    private Boolean subscriptionActive;
 
     // Datos del Client (solo si role == CLIENT)
     private Long clientId;
@@ -60,4 +62,6 @@ public class UserProfileResponse {
     public void setAssignedTrainerId(Long assignedTrainerId) { this.assignedTrainerId = assignedTrainerId; }
     public String getAssignedTrainerName() { return assignedTrainerName; }
     public void setAssignedTrainerName(String assignedTrainerName) { this.assignedTrainerName = assignedTrainerName; }
+    public Boolean getSubscriptionActive() { return subscriptionActive; }
+    public void setSubscriptionActive(Boolean subscriptionActive) { this.subscriptionActive = subscriptionActive; }
 }

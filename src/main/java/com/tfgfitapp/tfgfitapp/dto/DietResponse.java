@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * DTO de respuesta para una dieta.
- * Incluye las comidas (meals) embebidas para facilitar la lectura en una sola llamada.
+ * DTO de respuesta para un plan nutricional (dieta) completo.
+ * 
+ * Incluye la lista de comidas asociadas para permitir una visualización
+ * integral del plan en una sola respuesta.
  */
 public class DietResponse {
 

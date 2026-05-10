@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Mi Plan de Alimentación')}"/>
+    <style>
+        :root {
+            --premium-gradient: linear-gradient(135deg, #FF8A65 0%, #FF5722 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        .view-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Selector de Comidas Premium */
+        .meal-type-pills {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 5px 25px 5px;
+            scrollbar-width: none;
+        }
+        .meal-type-pills::-webkit-scrollbar { display: none; }
+        
+        .meal-pill {
+            flex: 0 0 auto;
+            padding: 14px 28px;
+            border-radius: 20px;
+            background: #fff;
+            color: #555;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .meal-pill.active {
+            background: var(--premium-gradient);
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(255,87,34,0.25);
+            transform: scale(1.05);
+            border-color: transparent;
+        }
+
+        /* Contenedor de Opciones */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .diet-option-card {
+            background: #fff;
+            border-radius: 30px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.03);
+            transition: transform 0.3s;
+        }
+        .diet-option-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header-accent {
+            background: #f8faff;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f3f7;
+        }
+        .meal-time {
+            font-weight: 800;
+            color: var(--orange);
+            font-size: 1.1rem;
+        }
+        .calories-badge {
+            background: #ffebe5;
+            color: #ff5722;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 0.85rem;
+        }
+
+        .card-body-content {
+            padding: 30px;
+        }
+        .foods-list {
+            margin-bottom: 30px;
+        }
+        .food-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .food-item i {
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        /* Macro Section */
+        .macro-container {
+            display: flex;
+            gap: 15px;
+            background: #fafbfc;
+            padding: 20px;
+            border-radius: 20px;
+        }
+        .macro-box {
+            flex: 1;
+            text-align: center;
+        }
+        .macro-val {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2d3436;
+        }
+        .macro-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #b2bec3;
+            letter-spacing: 0.5px;
+        }
+
+        .notes-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #eee;
+            font-style: italic;
+            color: #636e72;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .view-container { padding: 15px; }
+            .card-header-accent { padding: 15px 20px; }
+            .card-body-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{fragments/sidebar :: sidebar}"/>
+
+<main class="main-content">
+    <div class="view-container">
+        <div class="d-flex align-items-center mb-4">
+            <button class="btn btn-sm btn-light rounded-circle me-3" onclick="window.location.href='/dashboard/diets'">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <h4 id="diet-title" class="m-0 fw-800">Plan Nutricional</h4>
+        </div>
+
+        <!-- Selector de Tipo de Comida -->
+        <div class="meal-type-pills" id="meal-selector">
+            <!-- Inyectado via JS -->
+        </div>
+
+        <div id="options-container" class="options-grid">
+            <!-- Inyectado via JS -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-orange"></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/app.js}"></script>
+<script>
+    requireAuth();
+    const dietId = new URLSearchParams(window.location.search).get('dietId');
+    const MEAL_TYPES = ['Desayuno', 'Media mañana', 'Comida', 'Merienda', 'Cena', 'Post-entreno'];
+    
+    let dietData = null;
+    let currentMealType = 'Desayuno';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (!dietId) { window.location.href='/dashboard/diets'; return; }
+        await loadDietDetails();
+    });
+
+    async function loadDietDetails() {
+        try {
+            const res = await apiFetch(`/diets/${dietId}`);
+            dietData = await res.json();
+            document.getElementById('diet-title').innerText = dietData.title;
+            
+            renderMealSelector();
+            // Intentar seleccionar la primera comida disponible o Desayuno
+            const firstAvailable = (dietData.meals || [])[0]?.mealType || 'Desayuno';
+            selectMealType(firstAvailable);
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function renderMealSelector() {
+        const container = document.getElementById('meal-selector');
+        // Obtener tipos únicos presentes en la dieta + los estándar
+        const availableTypes = [...new Set((dietData.meals || []).map(m => m.mealType))];
+        const displayTypes = availableTypes.length > 0 ? availableTypes : MEAL_TYPES;
+
+        container.innerHTML = displayTypes.map(type => `
+            <div class="meal-pill ${type === currentMealType ? 'active' : ''}" onclick="selectMealType('${type}')">
+                ${type}
+            </div>
+        `).join('');
+    }
+
+    function selectMealType(type) {
+        currentMealType = type;
+        
+        // Update pills
+        document.querySelectorAll('.meal-pill').forEach(p => {
+            p.classList.toggle('active', p.innerText.trim() === type);
+        });
+
+        renderOptions();
+    }
+
+    function renderOptions() {
+        const container = document.getElementById('options-container');
+        const meals = (dietData.meals || []).filter(m => m.mealType === currentMealType);
+        
+        if (meals.length === 0) {
+            container.innerHTML = '<div class="empty-state">No hay opciones registradas para ' + currentMealType + '</div>';
+            return;
+        }
+
+        container.innerHTML = meals.map(m => `
+            <div class="diet-option-card">
+                <div class="card-header-accent">
+                    <div class="meal-time"><i class="bi bi-clock me-2"></i>${m.mealTime || '--:--'}</div>
+                    <div class="calories-badge">${m.calories || 0} kcal</div>
+                </div>
+                <div class="card-body-content">
+                    <div class="foods-list">
+                        ${m.foods.split('\n').filter(f => f.trim()).map(f => `
+                            <div class="food-item">
+                                <i class="bi bi-check2-circle"></i>
+                                <span>${f.trim()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="macro-container">
+                        <div class="macro-box">
+                            <span class="macro-val">${m.protein || 0}g</span>
+                            <span class="macro-label">Proteína</span>
+                        </div>
+                        <div class="macro-box">
+                            <span class="macro-val">${m.carbs || 0}g</span>
+                            <span class="macro-label">Carbos</span>
+                        </div>
+                        <div class="macro-box">
+                            <span class="macro-val">${m.fats || 0}g</span>
+                            <span class="macro-label">Grasas</span>
+                        </div>
+                    </div>
+
+                    ${m.notes ? `<div class="notes-section"><strong>Nota:</strong> ${m.notes}</div>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+</script>
+</body>
+</html>

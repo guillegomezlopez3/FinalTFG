@@ -12,11 +12,8 @@
             <h4>Mi Progreso</h4>
             <p>Registra y consulta tu evolución física</p>
         </div>
-        <div class="d-flex gap-2">
-            <a id="btn-export" href="#" class="btn-outline-orange btn-sm" onclick="exportCsv(event)">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
-            </a>
-            <button class="btn-orange" onclick="openNewRecord()">
+        <div class="d-flex gap-2" id="action-buttons">
+            <button class="btn-orange" id="btn-new-record" onclick="openNewRecord()">
                 <i class="bi bi-plus-lg"></i> Nuevo registro
             </button>
         </div>
@@ -137,20 +134,52 @@ let weightChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     recordModalBs = new bootstrap.Modal(document.getElementById('recordModal'));
+    
+    /* Restringir acciones si es cliente (según petición de usuario) */
+    const user = getUser();
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetClientId = urlParams.get('clientId');
+
+    if (user && user.role === 'CLIENT') {
+        document.getElementById('action-buttons').style.display = 'none';
+        document.querySelectorAll('.btn-outline-danger').forEach(b => b.style.display = 'none');
+    } else if (targetClientId) {
+        // Si es un trainer viendo a un cliente, mostramos los botones
+        document.getElementById('action-buttons').style.display = 'flex';
+    }
+
     loadProgress();
 });
 
 async function loadProgress() {
     try {
-        const res = await apiFetch('/progress/me');
-        records = await res.json();
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetClientId = urlParams.get('clientId');
+        
+        let url = '/progress/me';
+        if (targetClientId) {
+            url = `/progress/client/${targetClientId}`;
+        }
+        
+        const res = await apiFetch(url);
+        const data = await res.json();
+        
+        // Verificamos que data sea un array (podría ser un objeto de error si el backend falla)
+        if (!Array.isArray(data)) {
+            throw new Error(data.error || 'Respuesta inesperada del servidor');
+        }
+        
+        records = data;
         renderLastStats(records);
         renderChart(records);
         renderTable(records);
         document.getElementById('total-label').textContent = `${records.length} registro${records.length !== 1 ? 's' : ''}`;
     } catch(e) {
+        console.error('Error al cargar progreso:', e);
         document.getElementById('progress-body').innerHTML =
-            `<tr><td colspan="10"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>Error al cargar</p></div></td></tr>`;
+            `<tr><td colspan="10"><div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>${e.message || 'Error al cargar los datos'}</p></div></td></tr>`;
+        document.getElementById('last-stats').innerHTML = 
+            `<div class="col-12 text-center text-muted"><small>No se pudieron cargar las estadísticas</small></div>`;
     }
 }
 
@@ -179,7 +208,7 @@ function renderLastStats(recs) {
 
 function renderChart(recs) {
     const container = document.getElementById('chart-container');
-    if (recs.length < 2) {
+    if (recs.length < 2 || typeof Chart === 'undefined') {
         container.style.display = 'none';
         return;
     }
@@ -265,9 +294,10 @@ function renderTable(recs) {
             <td>${r.legs ? r.legs+' cm' : '—'}</td>
             <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.notes||''}">${r.notes||'—'}</td>
             <td>
+                ${(getUser().role !== 'CLIENT') ? `
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteRecord(${r.id})" title="Eliminar">
                     <i class="bi bi-trash"></i>
-                </button>
+                </button>` : ''}
             </td>
         </tr>`;
     }).join('');
@@ -288,6 +318,9 @@ function openNewRecord() {
 }
 
 async function saveRecord() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetClientId = urlParams.get('clientId');
+
     const body = {
         recordDate: document.getElementById('rec-date').value,
         weight:     parseFloat(document.getElementById('rec-weight').value) || null,
@@ -297,7 +330,8 @@ async function saveRecord() {
         hips:       parseFloat(document.getElementById('rec-hips').value)   || null,
         arms:       parseFloat(document.getElementById('rec-arms').value)   || null,
         legs:       parseFloat(document.getElementById('rec-legs').value)   || null,
-        notes:      document.getElementById('rec-notes').value || null
+        notes:      document.getElementById('rec-notes').value || null,
+        clientId:   targetClientId ? parseInt(targetClientId) : null
     };
     if (!body.recordDate) {
         showAlert(document.getElementById('record-alert'), 'La fecha es obligatoria');
@@ -319,20 +353,6 @@ async function deleteRecord(id) {
     loadProgress();
 }
 
-async function exportCsv(e) {
-    e.preventDefault();
-    try {
-        const token = getToken();
-        const resp = await fetch('/api/progress/me/export', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const blob = await resp.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url; a.download = 'mi_progreso.csv'; a.click();
-        URL.revokeObjectURL(url);
-    } catch(e) { alert('Error al exportar'); }
-}
 </script>
 </body>
 </html>

@@ -2,6 +2,11 @@ package com.tfgfitapp.tfgfitapp.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * DTO para la solicitud de recuperación de contraseña.
+ * 
+ * Inicia el proceso enviando un enlace o token al correo electrónico del usuario.
+ */
 public class ForgotPasswordRequest {
     @NotBlank(message = "Email es requerido")
     private String email;

@@ -20,37 +20,40 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Servicio de gestión de clientes.
- *
- * Control de acceso:
- * - ADMIN: puede ver y gestionar cualquier cliente.
- * - TRAINER: solo puede ver/editar sus propios clientes.
- * - CLIENT: solo puede ver/editar su propio perfil.
+ * Servicio para la gestión integral de Clientes.
+ * 
+ * Implementa la lógica de negocio para la consulta de perfiles, creación de clientes
+ * por entrenadores, actualización de datos antropométricos y control de acceso por roles.
  */
 @Service
 public class ClientService {
 
     public ClientService(ClientRepository clientRepository, TrainerRepository trainerRepository,
-                         UserRepository userRepository, PasswordEncoder passwordEncoder) {
+                         UserRepository userRepository, PasswordEncoder passwordEncoder,
+                         EmailService emailService) {
         this.clientRepository = clientRepository;
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     private final ClientRepository clientRepository;
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     // ===== LECTURA =====
 
     /**
-     * El TRAINER obtiene la lista paginada de sus propios clientes.
+     * Obtiene los clientes asignados al entrenador autenticado.
+     * 
+     * @param currentUser Entrenador que realiza la consulta.
+     * @param pageable Parámetros de paginación.
+     * @return Página de clientes asignados.
      */
     @Transactional(readOnly = true)
     public PageResponse<ClientResponse> getMyClients(User currentUser, Pageable pageable) {
@@ -60,10 +63,11 @@ public class ClientService {
     }
 
     /**
-     * Obtiene un cliente por ID con control de acceso:
-     * - TRAINER: debe ser su cliente.
-     * - CLIENT: debe ser él mismo.
-     * - ADMIN: sin restricción.
+     * Obtiene los detalles de un cliente por su identificador.
+     * 
+     * @param clientId ID del cliente.
+     * @param currentUser Usuario que consulta.
+     * @return Objeto con la información detallada del cliente.
      */
     @Transactional(readOnly = true)
     public ClientResponse getClientById(Long clientId, User currentUser) {
@@ -75,7 +79,11 @@ public class ClientService {
     // ===== ACTUALIZACIN =====
 
     /**
-     * El TRAINER crea y asigna un nuevo cliente a s mismo.
+     * Crea un nuevo perfil de cliente y lo asocia al entrenador que lo registra.
+     * 
+     * @param request Datos del nuevo cliente y credenciales.
+     * @param currentUser Entrenador que realiza el registro.
+     * @return El cliente creado con su usuario asociado.
      */
     @Transactional
     public ClientResponse createClient(com.tfgfitapp.tfgfitapp.dto.CreateClientByTrainerRequest request, User currentUser) {
@@ -85,12 +93,16 @@ public class ClientService {
             throw new IllegalArgumentException("Ya existe un usuario registrado con el correo: " + request.getEmail());
         }
 
+        String rawPassword = request.getPassword() != null && !request.getPassword().trim().isEmpty() 
+                ? request.getPassword() : "lvlupRtg";
+
         User newUser = new User();
         newUser.setName(request.getName());
         newUser.setEmail(request.getEmail());
-        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setPassword(passwordEncoder.encode(rawPassword));
         newUser.setRole(Role.CLIENT);
         newUser.setActive(true);
+        newUser.setEmailConfirmed(false); // Clientes nuevos deben confirmar
         
         userRepository.save(newUser);
 
@@ -108,14 +120,21 @@ public class ClientService {
         newClient.setNotes(request.getNotes());
         newClient.setActive(true);
 
-        return toResponse(clientRepository.save(newClient));
+        Client savedClient = clientRepository.save(newClient);
+
+        // Enviar email de bienvenida con credenciales
+        emailService.sendClientWelcomeEmail(newUser, rawPassword);
+
+        return toResponse(savedClient);
     }
 
     /**
-     * Actualiza los datos de un cliente. Solo campos no nulos del request.
-     * - TRAINER puede editar cualquiera de sus clientes.
-     * - CLIENT puede editar su propio perfil.
-     * - ADMIN puede editar cualquier cliente.
+     * Actualiza la información antropométrica y de contacto de un cliente.
+     * 
+     * @param clientId ID del cliente.
+     * @param request Nuevos datos del cliente.
+     * @param currentUser Usuario que solicita la actualización.
+     * @return El cliente actualizado.
      */
     @Transactional
     public ClientResponse updateClient(Long clientId, ClientUpdateRequest request, User currentUser) {

@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controlador para la consulta de ejercicios predefinidos.
+ * 
+ * Proporciona el catálogo base de ejercicios disponibles en el sistema,
+ * permitiendo su filtrado o agrupación por categoría (grupo muscular).
+ */
 @RestController
 @RequestMapping("/api/predefined-exercises")
 public class PredefinedExerciseController {
@@ -22,11 +28,21 @@ public class PredefinedExerciseController {
 
     private final PredefinedExerciseRepository repository;
 
+    /**
+     * Obtiene la lista completa de ejercicios predefinidos en el catálogo.
+     * 
+     * @return Lista de todos los ejercicios.
+     */
     @GetMapping
     public ResponseEntity<List<PredefinedExercise>> getAll() {
         return ResponseEntity.ok(repository.findAll());
     }
 
+    /**
+     * Obtiene los ejercicios predefinidos agrupados por su grupo muscular.
+     * 
+     * @return Mapa donde la clave es el nombre del grupo muscular y el valor es la lista de ejercicios.
+     */
     @GetMapping("/grouped")
     public ResponseEntity<Map<String, List<PredefinedExercise>>> getGroupedByCategory() {
         List<PredefinedExercise> exercises = repository.findAll();

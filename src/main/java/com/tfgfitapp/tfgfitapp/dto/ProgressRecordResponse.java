@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * DTO de respuesta para un registro de progreso físico.
+ * DTO de respuesta con los datos históricos de progreso físico de un cliente.
  */
 public class ProgressRecordResponse {
 

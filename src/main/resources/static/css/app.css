@@ -139,6 +139,30 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 .sidebar-user-info .name  { font-size: .85rem; font-weight: 600; line-height: 1.2; }
 .sidebar-user-info .role  { font-size: .72rem; color: var(--sidebar-text); }
 
+/* Avatares con iniciales */
+.avatar-initials {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .85rem; color: #fff;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.avatar-initials.sm { width: 32px; height: 32px; font-size: .75rem; }
+.avatar-initials.lg { width: 48px; height: 48px; font-size: 1.1rem; }
+.avatar-initials.xl { width: 64px; height: 64px; font-size: 1.5rem; }
+
+.avatar-img {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.avatar-img.sm { width: 32px; height: 32px; }
+.avatar-img.lg { width: 48px; height: 48px; }
+.avatar-img.xl { width: 64px; height: 64px; }
+
 .btn-logout {
     display: flex; align-items: center; gap: .6rem;
     color: #e57373; font-size: .85rem;

@@ -48,17 +48,29 @@ public class WorkoutDay {
     @JsonIgnore
     private List<Exercise> exercises = new ArrayList<>();
 
+    /** @return El identificador único del día de entrenamiento. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El plan de entrenamiento al que pertenece este día. */
     public WorkoutPlan getWorkoutPlan() { return workoutPlan; }
+    /** @param workoutPlan El plan de entrenamiento a asociar. */
     public void setWorkoutPlan(WorkoutPlan workoutPlan) { this.workoutPlan = workoutPlan; }
+    /** @return Día de la semana (Lunes, Martes, etc.). */
     public DayOfWeekPlan getDayOfWeek() { return dayOfWeek; }
+    /** @param dayOfWeek El día de la semana a asignar. */
     public void setDayOfWeek(DayOfWeekPlan dayOfWeek) { this.dayOfWeek = dayOfWeek; }
+    /** @return Enfoque del entrenamiento (e.g., "Pecho y Tríceps"). */
     public String getFocus() { return focus; }
+    /** @param focus El nuevo enfoque. */
     public void setFocus(String focus) { this.focus = focus; }
+    /** @return Notas adicionales para este día. */
     public String getNotes() { return notes; }
+    /** @param notes Las nuevas notas. */
     public void setNotes(String notes) { this.notes = notes; }
+    /** @return Lista de ejercicios prescritos para este día. */
     public List<Exercise> getExercises() { return exercises; }
+    /** @param exercises La nueva lista de ejercicios. */
     public void setExercises(List<Exercise> exercises) { this.exercises = exercises; }
 }
 

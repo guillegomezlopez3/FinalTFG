@@ -1,5 +1,8 @@
 package com.tfgfitapp.tfgfitapp.dto;
 
+/**
+ * DTO para el envío de un mensaje directo entre usuarios.
+ */
 public class SendMessageRequest {
 
     public SendMessageRequest() {}

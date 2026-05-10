@@ -3,6 +3,11 @@ package com.tfgfitapp.tfgfitapp.entity;
 import jakarta.persistence.*;
 import com.tfgfitapp.tfgfitapp.enumeration.MuscleGroup;
 
+/**
+ * Entidad que representa un ejercicio predefinido del catálogo global.
+ * 
+ * Permite estandarizar los nombres de ejercicios y categorizarlos por grupo muscular.
+ */
 @Entity
 @Table(name = "predefined_exercises")
 public class PredefinedExercise {
@@ -22,11 +27,24 @@ public class PredefinedExercise {
 
     @Column(length = 100)
     private String equipment;
+
+    @Column(length = 255)
+    private String gifUrl;
+
+    public PredefinedExercise(Long id, String name, MuscleGroup muscleGroup, String equipment, String gifUrl) {
+        this.id = id;
+        this.name = name;
+        this.muscleGroup = muscleGroup;
+        this.equipment = equipment;
+        this.gifUrl = gifUrl;
+    }
+
     public PredefinedExercise(Long id, String name, MuscleGroup muscleGroup, String equipment) {
         this.id = id;
         this.name = name;
         this.muscleGroup = muscleGroup;
         this.equipment = equipment;
+        this.gifUrl = null;
     }
 
     public Long getId() { return id; }
@@ -37,4 +55,6 @@ public class PredefinedExercise {
     public void setMuscleGroup(MuscleGroup muscleGroup) { this.muscleGroup = muscleGroup; }
     public String getEquipment() { return equipment; }
     public void setEquipment(String equipment) { this.equipment = equipment; }
+    public String getGifUrl() { return gifUrl; }
+    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
 }

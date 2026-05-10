@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <th:block th:replace="~{fragments/head :: head(title='Pago completado')}"/>
+</head>
+<body>
+<div class="auth-wrapper d-flex justify-content-center align-items-center" style="min-height: 100vh; background: #f8f9fa;">
+    <div class="card shadow-lg border-0" style="max-width: 500px; width: 100%; border-radius: 1rem;">
+        <div class="card-body p-5 text-center fade-in-up">
+            <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #10b981;"></i>
+            <h2 class="mt-4 mb-3">¡Suscripción activada!</h2>
+            <p class="text-muted mb-4">El proceso de pago se ha completado correctamente. Ya tienes acceso total a tu panel de entrenador.</p>
+            <a href="/dashboard" class="btn btn-primary px-4 py-2" style="background: var(--orange); border: none; font-weight: 600;">Ir al Dashboard</a>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script>
+    const user = getUser();
+    if (user && user.role === 'TRAINER') {
+        apiFetch('/stripe/activate-trainer', { method: 'POST' })
+            .then(res => {
+                if (res.ok) console.log('Suscripción activada localmente');
+            })
+            .catch(err => console.error('Error activando suscripción:', err));
+    }
+
+    setTimeout(() => {
+        window.location.href = '/dashboard';
+    }, 3000);
+</script>
+</body>
+</html>

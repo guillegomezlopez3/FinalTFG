@@ -18,15 +18,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * Controlador de gestion de clientes.
- *
- * Endpoints:
- * - POST   /api/clients              → TRAINER: crea y asigna un nuevo cliente a si mismo
- * - GET    /api/clients              → TRAINER: lista paginada de sus clientes
- * - GET    /api/clients/{id}         → TRAINER (propio) / CLIENT (si mismo) / ADMIN
- * - PUT    /api/clients/{id}         → TRAINER (propio) / CLIENT (si mismo) / ADMIN
- * - DELETE /api/clients/{id}         → TRAINER (propio) / ADMIN: desactiva un cliente
- * - PUT    /api/clients/{id}/trainer → ADMIN: asigna entrenador
+ * Controlador para la gestión de Clientes.
+ * 
+ * Proporciona endpoints para que los entrenadores creen y gestionen sus clientes,
+ * para que los clientes consulten su propio perfil, y para que los administradores
+ * asignen entrenadores a los clientes.
  */
 @RestController
 @RequestMapping("/api/clients")
@@ -39,8 +35,11 @@ public class ClientController {
     private final ClientService clientService;
 
     /**
-     * POST /api/clients
-     * Un TRAINER crea un nuevo cliente y se le asigna automaticamente.
+     * Crea un nuevo cliente y lo vincula al entrenador actual.
+     * 
+     * @param request Datos del nuevo cliente a crear.
+     * @param currentUser Entrenador que realiza la creación.
+     * @return 200 OK con los datos del cliente recién creado.
      */
     @PostMapping
     @PreAuthorize("hasRole('TRAINER')")
@@ -51,8 +50,11 @@ public class ClientController {
     }
 
     /**
-     * GET /api/clients?page=0&size=10&sort=createdAt,desc
-     * Un TRAINER obtiene su lista de clientes paginada.
+     * Obtiene la lista paginada de clientes asociados al usuario autenticado.
+     * 
+     * @param currentUser Entrenador o administrador autenticado.
+     * @param pageable Parámetros de paginación.
+     * @return 200 OK con la página de clientes.
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
@@ -63,7 +65,11 @@ public class ClientController {
     }
 
     /**
-     * GET /api/clients/{id}
+     * Obtiene los detalles de un cliente específico por su ID.
+     * 
+     * @param id Identificador único del cliente.
+     * @param currentUser Usuario que realiza la consulta (debe tener permisos sobre el cliente).
+     * @return 200 OK con el perfil detallado del cliente.
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
@@ -74,7 +80,12 @@ public class ClientController {
     }
 
     /**
-     * PUT /api/clients/{id}
+     * Actualiza la información de un cliente.
+     * 
+     * @param id Identificador del cliente.
+     * @param request Datos actualizados.
+     * @param currentUser Usuario que realiza la actualización.
+     * @return 200 OK con los datos del cliente actualizados.
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'CLIENT', 'ADMIN')")
@@ -86,8 +97,11 @@ public class ClientController {
     }
 
     /**
-     * DELETE /api/clients/{id}
-     * Desactiva un cliente. Solo puede hacerlo su TRAINER o un ADMIN.
+     * Desactiva el perfil de un cliente (borrado lógico).
+     * 
+     * @param id Identificador del cliente.
+     * @param currentUser Usuario que realiza la baja.
+     * @return 204 No Content si se desactiva correctamente.
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('TRAINER', 'ADMIN')")
@@ -99,8 +113,12 @@ public class ClientController {
     }
 
     /**
-     * PUT /api/clients/{id}/trainer
-     * Asigna un entrenador a un cliente. Solo ADMIN.
+     * Asigna un entrenador a un cliente específico.
+     * 
+     * @param id Identificador del cliente.
+     * @param request Datos de la asignación (ID del entrenador).
+     * @param currentUser Administrador autenticado.
+     * @return 200 OK con el cliente actualizado.
      */
     @PutMapping("/{id}/trainer")
     @PreAuthorize("hasRole('ADMIN')")

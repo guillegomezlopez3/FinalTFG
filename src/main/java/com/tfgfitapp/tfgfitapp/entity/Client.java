@@ -10,13 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Cliente de un entrenador. Vinculado a un User con role CLIENT.
- * Un Client pertenece a un Trainer (puede quedar null hasta ser asignado).
- * Tiene dietas, planes de entrenamiento y registros de progreso asociados.
- *
- * NOTA: trainer_id es NOT NULL en el script SQL, pero en esta fase del proyecto
- * se permite null en JPA para poder registrar clientes antes de asignarles un entrenador.
- * Ajusta nullable=false si el flujo de negocio lo requiere desde el inicio.
+ * Entidad que representa a un Cliente en el sistema.
+ * 
+ * Un cliente está vinculado a un {@link User} con rol CLIENT y pertenece a un {@link Trainer}.
+ * Contiene información antropométrica, objetivos, lesiones, alergias y el historial
+ * de sus dietas, planes de entrenamiento y registros de progreso.
  */
 @Entity
 @Table(name = "clients")
@@ -107,32 +105,59 @@ public class Client {
     }
 
     // Manual Getters/Setters
+    /** @return El identificador único del cliente. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El usuario base asociado. */
     public User getUser() { return user; }
+    /** @param user El nuevo usuario a asociar. */
     public void setUser(User user) { this.user = user; }
+    /** @return El entrenador asignado. */
     public Trainer getTrainer() { return trainer; }
+    /** @param trainer El nuevo entrenador a asignar. */
     public void setTrainer(Trainer trainer) { this.trainer = trainer; }
+    /** @return La edad del cliente. */
     public Integer getAge() { return age; }
+    /** @param age La nueva edad. */
     public void setAge(Integer age) { this.age = age; }
+    /** @return El género del cliente. */
     public String getGender() { return gender; }
+    /** @param gender El nuevo género. */
     public void setGender(String gender) { this.gender = gender; }
+    /** @return La altura en cm/m. */
     public BigDecimal getHeight() { return height; }
+    /** @param height La nueva altura. */
     public void setHeight(BigDecimal height) { this.height = height; }
+    /** @return El peso en kg. */
     public BigDecimal getWeight() { return weight; }
+    /** @param weight El nuevo peso. */
     public void setWeight(BigDecimal weight) { this.weight = weight; }
+    /** @return El objetivo fitness. */
     public String getGoal() { return goal; }
+    /** @param goal El nuevo objetivo. */
     public void setGoal(String goal) { this.goal = goal; }
+    /** @return El nivel de experiencia. */
     public ClientLevel getLevel() { return level; }
+    /** @param level El nuevo nivel. */
     public void setLevel(ClientLevel level) { this.level = level; }
+    /** @return Información sobre lesiones. */
     public String getInjuries() { return injuries; }
+    /** @param injuries Las lesiones registradas. */
     public void setInjuries(String injuries) { this.injuries = injuries; }
+    /** @return Información sobre alergias. */
     public String getAllergies() { return allergies; }
+    /** @param allergies Las alergias registradas. */
     public void setAllergies(String allergies) { this.allergies = allergies; }
+    /** @return Notas adicionales. */
     public String getNotes() { return notes; }
+    /** @param notes Las nuevas notas. */
     public void setNotes(String notes) { this.notes = notes; }
+    /** @return true si el cliente está activo. */
     public Boolean getActive() { return active; }
+    /** @param active El nuevo estado. */
     public void setActive(Boolean active) { this.active = active; }
+    /** @return Fecha de creación del registro. */
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     @Override

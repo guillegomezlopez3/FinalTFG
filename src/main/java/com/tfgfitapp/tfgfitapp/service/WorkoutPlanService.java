@@ -16,24 +16,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de gestión de planes de entrenamiento, días y ejercicios.
- *
- * Control de acceso:
- * - TRAINER: crea, edita y elimina planes para sus propios clientes.
- * - CLIENT: solo puede leer sus propios planes.
- * - ADMIN: acceso completo.
+ * Servicio para la planificación y gestión de Entrenamientos.
+ * 
+ * Permite estructurar planes complejos compuestos por días específicos y ejercicios
+ * detallados, facilitando el seguimiento de las rutinas por parte de los clientes.
  */
 @Service
 public class WorkoutPlanService {
 
     public WorkoutPlanService(WorkoutPlanRepository workoutPlanRepository, WorkoutDayRepository workoutDayRepository,
                               ExerciseRepository exerciseRepository, ClientRepository clientRepository,
-                              TrainerRepository trainerRepository) {
+                              TrainerRepository trainerRepository, PredefinedExerciseRepository predefinedExerciseRepository) {
         this.workoutPlanRepository = workoutPlanRepository;
         this.workoutDayRepository = workoutDayRepository;
         this.exerciseRepository = exerciseRepository;
         this.clientRepository = clientRepository;
         this.trainerRepository = trainerRepository;
+        this.predefinedExerciseRepository = predefinedExerciseRepository;
     }
 
     private final WorkoutPlanRepository workoutPlanRepository;
@@ -41,11 +40,16 @@ public class WorkoutPlanService {
     private final ExerciseRepository exerciseRepository;
     private final ClientRepository clientRepository;
     private final TrainerRepository trainerRepository;
+    private final PredefinedExerciseRepository predefinedExerciseRepository;
 
     // ===== PLANES =====
 
     /**
-     * TRAINER crea un plan de entrenamiento para uno de sus clientes.
+     * Crea un nuevo plan de entrenamiento estructurado para un cliente.
+     * 
+     * @param request Datos básicos del plan.
+     * @param currentUser Entrenador que prescribe el plan.
+     * @return El plan creado con sus metadatos.
      */
     @Transactional
     public WorkoutPlanResponse createPlan(WorkoutPlanRequest request, User currentUser) {
@@ -67,7 +71,13 @@ public class WorkoutPlanService {
     }
 
     /**
-     * Obtiene todos los planes de un cliente con control de acceso, paginados y filtrados opcionalmente por active.
+     * Obtiene una página de planes de entrenamiento asociados a un cliente.
+     * 
+     * @param clientId ID del cliente.
+     * @param active Opcional. Filtrar por estado activo/inactivo.
+     * @param pageable Parámetros de paginación.
+     * @param currentUser Usuario que consulta.
+     * @return Página de planes de entrenamiento.
      */
     @Transactional(readOnly = true)
     public PageResponse<WorkoutPlanResponse> getPlansByClient(Long clientId, Boolean active, Pageable pageable, User currentUser) {
@@ -85,7 +95,11 @@ public class WorkoutPlanService {
     }
 
     /**
-     * Obtiene un plan por ID con control de acceso.
+     * Obtiene los detalles completos de un plan de entrenamiento por su ID.
+     * 
+     * @param planId ID del plan.
+     * @param currentUser Usuario que consulta.
+     * @return Respuesta con la información del plan.
      */
     @Transactional(readOnly = true)
     public WorkoutPlanResponse getPlanById(Long planId, User currentUser) {
@@ -127,7 +141,12 @@ public class WorkoutPlanService {
     // ===== DÍAS DE ENTRENAMIENTO (WorkoutDay) =====
 
     /**
-     * TRAINER añade un día a un plan propio.
+     * Añade un día de entrenamiento a un plan existente.
+     * 
+     * @param planId ID del plan.
+     * @param request Datos del día (ej. Lunes - Pecho).
+     * @param currentUser Entrenador que añade el día.
+     * @return El día de entrenamiento creado.
      */
     @Transactional
     public WorkoutDayResponse addDay(Long planId, WorkoutDayRequest request, User currentUser) {
@@ -180,7 +199,12 @@ public class WorkoutPlanService {
     // ===== EJERCICIOS =====
 
     /**
-     * TRAINER añade un ejercicio a un día propio.
+     * Añade un ejercicio específico a un día de entrenamiento.
+     * 
+     * @param dayId ID del día de entrenamiento.
+     * @param request Datos del ejercicio (series, reps, etc.).
+     * @param currentUser Entrenador que añade el ejercicio.
+     * @return El ejercicio creado.
      */
     @Transactional
     public ExerciseResponse addExercise(Long dayId, ExerciseRequest request, User currentUser) {
@@ -199,6 +223,11 @@ public class WorkoutPlanService {
         exercise.setRestSeconds(request.getRestSeconds());
         exercise.setDurationMinutes(request.getDurationMinutes());
         exercise.setNotes(request.getNotes());
+        exercise.setGifUrl(request.getGifUrl());
+        if (request.getPredefinedExerciseId() != null) {
+            predefinedExerciseRepository.findById(request.getPredefinedExerciseId())
+                    .ifPresent(exercise::setPredefinedExercise);
+        }
 
         return toExerciseResponse(exerciseRepository.save(exercise));
     }
@@ -221,6 +250,11 @@ public class WorkoutPlanService {
         if (request.getRestSeconds() != null)     exercise.setRestSeconds(request.getRestSeconds());
         if (request.getDurationMinutes() != null) exercise.setDurationMinutes(request.getDurationMinutes());
         if (request.getNotes() != null)           exercise.setNotes(request.getNotes());
+        if (request.getGifUrl() != null)          exercise.setGifUrl(request.getGifUrl());
+        if (request.getPredefinedExerciseId() != null) {
+            predefinedExerciseRepository.findById(request.getPredefinedExerciseId())
+                    .ifPresent(exercise::setPredefinedExercise);
+        }
 
         return toExerciseResponse(exerciseRepository.save(exercise));
     }
@@ -352,6 +386,10 @@ public class WorkoutPlanService {
         response.setRestSeconds(exercise.getRestSeconds());
         response.setDurationMinutes(exercise.getDurationMinutes());
         response.setNotes(exercise.getNotes());
+        response.setGifUrl(exercise.getGifUrl());
+        if (exercise.getPredefinedExercise() != null) {
+            response.setPredefinedExerciseId(exercise.getPredefinedExercise().getId());
+        }
         return response;
     }
 }

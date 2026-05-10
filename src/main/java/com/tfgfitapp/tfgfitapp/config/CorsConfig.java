@@ -11,14 +11,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Configuracion CORS para permitir peticiones desde el frontend.
- *
- * Los origenes permitidos se configuran en application.properties
- * con la propiedad app.cors.allowed-origins (separados por coma).
- *
- * Por defecto permite:
- *   - http://localhost:3000  (Create React App / Next.js)
- *   - http://localhost:5173  (Vite + React / Vue)
+ * Configuración de CORS (Cross-Origin Resource Sharing).
+ * 
+ * Define las políticas de acceso desde orígenes externos (frontend) a la API.
+ * Permite configurar los orígenes permitidos, métodos HTTP, cabeceras y exposición de tokens JWT.
  */
 @Configuration
 public class CorsConfig {
@@ -26,15 +22,20 @@ public class CorsConfig {
     @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
     private String allowedOriginsRaw;
 
+    /**
+     * Define el bean de configuración de CORS.
+     * 
+     * @return Fuente de configuración CORS basada en URLs.
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Origenes permitidos: frontend local y cualquier origen configurado
+        // Orígenes permitidos: frontend local y cualquier origen configurado
         List<String> origins = Arrays.asList(allowedOriginsRaw.split(","));
         config.setAllowedOrigins(origins);
 
-        // Metodos HTTP permitidos
+        // Métodos HTTP permitidos
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
         // Cabeceras permitidas (Authorization es necesario para JWT)
@@ -54,4 +55,3 @@ public class CorsConfig {
         return source;
     }
 }
-

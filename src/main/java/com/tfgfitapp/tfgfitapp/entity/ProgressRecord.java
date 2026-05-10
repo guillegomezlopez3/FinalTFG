@@ -8,8 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Registro de progreso físico de un Client en una fecha determinada.
- * Todas las medidas corporales son opcionales para flexibilidad.
+ * Entidad que representa un Registro de Progreso físico de un cliente.
+ * 
+ * Almacena diversas medidas antropométricas (peso, grasa corporal, perímetros)
+ * en una fecha determinada para realizar un seguimiento de la evolución del cliente.
  */
 @Entity
 @Table(name = "progress_records")
@@ -71,29 +73,53 @@ public class ProgressRecord {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /** @return El identificador único del registro. */
     public Long getId() { return id; }
+    /** @param id El nuevo ID a asignar. */
     public void setId(Long id) { this.id = id; }
+    /** @return El cliente asociado al registro. */
     public Client getClient() { return client; }
+    /** @param client El cliente a asignar. */
     public void setClient(Client client) { this.client = client; }
+    /** @return Fecha en la que se tomaron las medidas. */
     public LocalDate getRecordDate() { return recordDate; }
+    /** @param recordDate La fecha del registro. */
     public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
+    /** @return Peso corporal en kg. */
     public BigDecimal getWeight() { return weight; }
+    /** @param weight El nuevo peso. */
     public void setWeight(BigDecimal weight) { this.weight = weight; }
+    /** @return Porcentaje de grasa corporal. */
     public BigDecimal getBodyFat() { return bodyFat; }
+    /** @param bodyFat El nuevo porcentaje de grasa. */
     public void setBodyFat(BigDecimal bodyFat) { this.bodyFat = bodyFat; }
+    /** @return Perímetro del pecho en cm. */
     public BigDecimal getChest() { return chest; }
+    /** @param chest La nueva medida de pecho. */
     public void setChest(BigDecimal chest) { this.chest = chest; }
+    /** @return Perímetro de la cintura en cm. */
     public BigDecimal getWaist() { return waist; }
+    /** @param waist La nueva medida de cintura. */
     public void setWaist(BigDecimal waist) { this.waist = waist; }
+    /** @return Perímetro de las caderas en cm. */
     public BigDecimal getHips() { return hips; }
+    /** @param hips La nueva medida de caderas. */
     public void setHips(BigDecimal hips) { this.hips = hips; }
+    /** @return Perímetro de los brazos en cm. */
     public BigDecimal getArms() { return arms; }
+    /** @param arms La nueva medida de brazos. */
     public void setArms(BigDecimal arms) { this.arms = arms; }
+    /** @return Perímetro de las piernas en cm. */
     public BigDecimal getLegs() { return legs; }
+    /** @param legs La nueva medida de piernas. */
     public void setLegs(BigDecimal legs) { this.legs = legs; }
+    /** @return Notas u observaciones adicionales. */
     public String getNotes() { return notes; }
+    /** @param notes Las nuevas notas. */
     public void setNotes(String notes) { this.notes = notes; }
+    /** @return Fecha de creación del registro. */
     public LocalDateTime getCreatedAt() { return createdAt; }
+    /** @param createdAt La nueva fecha de creación. */
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     @PrePersist

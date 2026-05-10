@@ -5,8 +5,7 @@ import com.tfgfitapp.tfgfitapp.enumeration.DayOfWeekPlan;
 import java.util.List;
 
 /**
- * DTO de respuesta para un día de entrenamiento.
- * Incluye los ejercicios embebidos.
+ * DTO de respuesta que detalla un día de entrenamiento, incluyendo su lista de ejercicios.
  */
 public class WorkoutDayResponse {
 

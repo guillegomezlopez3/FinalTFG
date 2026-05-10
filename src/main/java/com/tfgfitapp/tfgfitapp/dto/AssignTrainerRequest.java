@@ -3,8 +3,9 @@ package com.tfgfitapp.tfgfitapp.dto;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * DTO para asignar un entrenador a un cliente.
- * Solo disponible para ADMIN.
+ * DTO para la solicitud de asignación de un entrenador a un cliente específico.
+ * 
+ * Utilizado por administradores para vincular perfiles de clientes con sus preparadores.
  */
 public class AssignTrainerRequest {
 
