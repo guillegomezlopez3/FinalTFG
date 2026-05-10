@@ -1,33 +1,49 @@
-HELP.md
+# Java/Maven
 target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+!**/src/main/**
+!**/src/test/**
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/app/src/main/res/drawable-*/
+android/app/src/main/res/mipmap-*/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IDEs
+.idea/
+.vscode/
 *.iml
 *.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+obj/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# OS Files
+.DS_Store
+Thumbs.db
 
-### VS Code ###
-.vscode/
+# Environment/Secrets
+.env
+application-local.properties
+application-secrets.properties
+
+# Excluir documentación de trabajo interna si se desea (aunque la guardaremos en otra carpeta)
+# DOCUMENTACION_FINAL/  <-- Según tu petición, esta NO la excluimos si quieres que esté, pero me pediste "menos los md", así que los mantengo fuera del gitignore por si acaso.
