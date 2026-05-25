@@ -1,0 +1,67 @@
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/app/src/main/res/drawable-*/
+android/app/src/main/res/mipmap-*/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+obj/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment/Secrets
+.env
+application-local.properties
+application-secrets.properties
+
+# Excluir documentación de trabajo interna si se desea (aunque la guardaremos en otra carpeta)
+# DOCUMENTACION_FINAL/  <-- Según tu petición, esta NO la excluimos si quieres que esté, pero me pediste "menos los md", así que los mantengo fuera del gitignore por si acaso.
+CREAR_BD_COMPLETA.sql
+PROJECT_DOCUMENTATION.md
+documentacion/TAREAS_PENDIENTES_APP_MOVIL.md
+documentacion/TAREAS_PENDIENTES_MOBILE_V2.md
+DOCUMENTACION_FINAL/02_INTRODUCCION.md
+DOCUMENTACION_FINAL/01_INDICE.md
+DOCUMENTACION_FINAL/03_TECNOLOGIAS.md
+DOCUMENTACION_FINAL/04_FUNCIONAMIENTO.md
+DOCUMENTACION_FINAL/05_API_REST.md
+documentacion/TAREAS_PENDIENTES_MOBILE_V2.md
+documentacion/TAREAS_PENDIENTES_APP_MOVIL.md
+# Ignorar scripts y documentacion
+*.sql
+*.md
+!README.md
+documentacion/
+DOCUMENTACION_FINAL/
+Github/
