@@ -8,7 +8,10 @@ import '../utils/token_utils.dart';
 class ApiClient {
   /// URL base para la comunicación con el servidor.
   /// 
-  /// Se utiliza '10.0.2.2' para compatibilidad con el emulador de Android.
+  /// Para desarrollo local (Emulador Android): 'http://10.0.2.2:8081/api'
+  /// Para desarrollo local (iOS Emulador / Web): 'http://localhost:8081/api'
+  /// Para celular físico en red Wi-Fi: 'http://<TU_IP_LOCAL>:8081/api'
+  /// PARA PRODUCCIÓN EN LA NUBE: Cambiar a la URL de tu servidor (ej. 'https://tu-dominio.com/api')
   static const String baseUrl = 'http://10.0.2.2:8081/api';
 
   /// Genera los headers necesarios para la petición.
