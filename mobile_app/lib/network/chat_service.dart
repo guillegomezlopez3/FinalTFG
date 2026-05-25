@@ -26,7 +26,7 @@ class ChatService {
   static Future<bool> sendMessage(int receiverId, String content) async {
     try {
       final response = await ApiClient.post(
-        '$chatEndpoint/send',
+        '$chatEndpoint/messages',
         {'receiverId': receiverId, 'content': content},
       );
       return response.statusCode == 200 || response.statusCode == 201;

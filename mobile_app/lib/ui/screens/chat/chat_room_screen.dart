@@ -159,17 +159,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.add_rounded, color: AppColors.primary),
-                onPressed: () {},
-              ),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -180,6 +169,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 child: TextField(
                   controller: _messageController,
                   maxLines: null,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _handleSendMessage(),
                   decoration: const InputDecoration(
                     hintText: 'Escribe un mensaje...',
                     hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
@@ -190,8 +181,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            GestureDetector(
+            InkWell(
               onTap: _handleSendMessage,
+              borderRadius: BorderRadius.circular(30),
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: const BoxDecoration(

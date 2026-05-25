@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_profile.dart';
@@ -8,6 +7,7 @@ import '../diets/diets_screen.dart';
 import '../workouts/workouts_screen.dart';
 import '../chat/chat_list_screen.dart';
 import '../profile/profile_screen.dart';
+import '../progress/progress_screen.dart';
 
 /// Pantalla principal de la aplicación (Dashboard).
 /// 
@@ -131,19 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildQuickActions(),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Tu Actividad',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.text,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildUpcomingWorkout(),
-                  const SizedBox(height: 100), // Space for bottom nav if any
+                  const SizedBox(height: 32),
+                  _buildProgressCard(context),
                 ],
               ),
             ),
@@ -323,158 +312,76 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildUpcomingWorkout() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: const LinearGradient(
-          colors: [AppColors.sidebarBg, AppColors.sidebarMid],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildProgressCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressScreen()));
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ]
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.sidebarBg.withOpacity(0.3),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              right: -30,
-              top: -30,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.primary.withOpacity(0.15),
-                      AppColors.primary.withOpacity(0),
-                    ],
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Tu Progreso',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              right: 20,
-              top: 40,
-              child: Opacity(
-                opacity: 0.1,
-                child: Image.asset(
-                  'assets/images/workout_bg.png', // Fallback if image doesn't exist
-                  width: 120,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.fitness_center_rounded,
-                    size: 100,
-                    color: Colors.white,
+                Text(
+                  'Ver Todo',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.show_chart_rounded, color: AppColors.primary),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.flash_on_rounded, color: AppColors.primary, size: 14),
-                            const SizedBox(width: 6),
-                            Text(
-                              'PRÓXIMO RITUAL',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
+                      Text(
+                        'Historial de Evolución',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        '18:00',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
+                        'Revisa tus marcas y estadísticas',
+                        style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Full Body Blast',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildMiniInfo(Icons.timer_outlined, '45 min'),
-                      const SizedBox(width: 20),
-                      _buildMiniInfo(Icons.local_fire_department_rounded, 'Alta intensidad'),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkoutsScreen()));
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        minimumSize: const Size(double.infinity, 58),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'EMPEZAR ENTRENAMIENTO',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 0.5),
-                          ),
-                          SizedBox(width: 12),
-                          Icon(Icons.play_arrow_rounded, size: 22),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.textMuted),
+              ],
             ),
           ],
         ),
@@ -745,4 +652,3 @@ class _QuickActionBtnState extends State<_QuickActionBtn> with SingleTickerProvi
     );
   }
 }
-

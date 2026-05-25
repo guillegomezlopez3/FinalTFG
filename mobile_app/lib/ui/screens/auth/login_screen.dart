@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../utils/app_colors.dart';
 import '../../widgets/custom_text_field.dart';
-import 'register_screen.dart';
 
 /// Pantalla de inicio de sesión de la aplicación.
 /// 
@@ -155,12 +154,38 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text(
+                                  'Recuperar Contraseña',
+                                  style: TextStyle(fontWeight: FontWeight.w900),
+                                ),
+                                content: const Text(
+                                  'Para restablecer tu contraseña de forma segura, por favor accede a la página web de TFGFitApp y solicita el cambio desde la pantalla de inicio de sesión.',
+                                  style: TextStyle(fontSize: 14, height: 1.4),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text(
+                                      'ENTENDIDO',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                           ),
-                          child: const Text('¿Problemas al entrar?'),
+                          child: const Text('Recuperar contraseña'),
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -202,32 +227,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           );
                         },
-                      ),
-                      const SizedBox(height: 40),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '¿Aún no tienes cuenta? ',
-                            style: TextStyle(color: AppColors.textMuted.withOpacity(0.8), fontWeight: FontWeight.w600),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                              );
-                            },
-                            child: const Text(
-                              'REGÍSTRATE',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

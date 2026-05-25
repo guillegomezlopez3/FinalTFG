@@ -15,7 +15,7 @@ public class ExerciseResponse {
     private Integer restSeconds;
     private Integer durationMinutes;
     private String notes;
-    private String gifUrl;
+    private String imageUrl;
     private Long predefinedExerciseId;
 
     public Long getId() { return id; }
@@ -34,8 +34,8 @@ public class ExerciseResponse {
     public void setDurationMinutes(Integer durationMinutes) { this.durationMinutes = durationMinutes; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
-    public String getGifUrl() { return gifUrl; }
-    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public Long getPredefinedExerciseId() { return predefinedExerciseId; }
     public void setPredefinedExerciseId(Long predefinedExerciseId) { this.predefinedExerciseId = predefinedExerciseId; }
 }

@@ -6,7 +6,7 @@ import '../../../utils/app_colors.dart';
 import '../../../models/diet.dart';
 
 /// Pantalla que muestra los planes nutricionales (dietas) del usuario.
-/// 
+///
 /// Permite visualizar los macronutrientes totales y marcar comidas como completadas.
 class DietsScreen extends StatefulWidget {
   const DietsScreen({super.key});
@@ -60,7 +60,8 @@ class _DietsScreenState extends State<DietsScreen> {
                 );
               }
 
-              if (dietProvider.errorMessage != null && dietProvider.diets.isEmpty) {
+              if (dietProvider.errorMessage != null &&
+                  dietProvider.diets.isEmpty) {
                 return SliverFillRemaining(
                   child: Center(
                     child: Padding(
@@ -68,7 +69,11 @@ class _DietsScreenState extends State<DietsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.restaurant_menu_rounded, size: 64, color: AppColors.textMuted.withOpacity(0.2)),
+                          Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 64,
+                            color: AppColors.textMuted.withOpacity(0.2),
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             dietProvider.errorMessage!,
@@ -85,13 +90,10 @@ class _DietsScreenState extends State<DietsScreen> {
               return SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final diet = dietProvider.diets[index];
-                      return _DietCard(diet: diet);
-                    },
-                    childCount: dietProvider.diets.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final diet = dietProvider.diets[index];
+                    return _DietCard(diet: diet);
+                  }, childCount: dietProvider.diets.length),
                 ),
               );
             },
@@ -125,7 +127,9 @@ class _DietCard extends StatelessWidget {
       if (meal.completed) completedCount++;
     }
 
-    final double progressVal = diet.meals.isEmpty ? 0 : completedCount / diet.meals.length;
+    final double progressVal = diet.meals.isEmpty
+        ? 0
+        : completedCount / diet.meals.length;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
@@ -156,7 +160,11 @@ class _DietCard extends StatelessWidget {
                         color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.auto_awesome_rounded, color: AppColors.primary, size: 24),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -165,11 +173,17 @@ class _DietCard extends StatelessWidget {
                         children: [
                           Text(
                             diet.title,
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                           Text(
                             diet.description ?? 'Plan nutricional activo',
-                            style: TextStyle(color: AppColors.textMuted.withOpacity(0.7), fontSize: 13),
+                            style: TextStyle(
+                              color: AppColors.textMuted.withOpacity(0.7),
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -181,10 +195,34 @@ class _DietCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _MacroItem(label: 'CALORÍAS', value: '$totalCals', icon: Icons.local_fire_department_rounded, color: Colors.orange, bgColor: Colors.orange.withOpacity(0.05)),
-                    _MacroItem(label: 'PROT (G)', value: totalProt.toStringAsFixed(0), icon: Icons.egg_alt_rounded, color: Colors.red, bgColor: Colors.red.withOpacity(0.05)),
-                    _MacroItem(label: 'HC (G)', value: totalCarbs.toStringAsFixed(0), icon: Icons.bakery_dining_rounded, color: Colors.blue, bgColor: Colors.blue.withOpacity(0.05)),
-                    _MacroItem(label: 'GRASA (G)', value: totalFats.toStringAsFixed(0), icon: Icons.water_drop_rounded, color: Colors.yellow[800]!, bgColor: Colors.yellow[800]!.withOpacity(0.05)),
+                    _MacroItem(
+                      label: 'CALORÍAS',
+                      value: '$totalCals',
+                      icon: Icons.local_fire_department_rounded,
+                      color: Colors.orange,
+                      bgColor: Colors.orange.withOpacity(0.05),
+                    ),
+                    _MacroItem(
+                      label: 'PROT (G)',
+                      value: totalProt.toStringAsFixed(0),
+                      icon: Icons.egg_alt_rounded,
+                      color: Colors.red,
+                      bgColor: Colors.red.withOpacity(0.05),
+                    ),
+                    _MacroItem(
+                      label: 'HC (G)',
+                      value: totalCarbs.toStringAsFixed(0),
+                      icon: Icons.bakery_dining_rounded,
+                      color: Colors.blue,
+                      bgColor: Colors.blue.withOpacity(0.05),
+                    ),
+                    _MacroItem(
+                      label: 'GRASA (G)',
+                      value: totalFats.toStringAsFixed(0),
+                      icon: Icons.water_drop_rounded,
+                      color: Colors.yellow[800]!,
+                      bgColor: Colors.yellow[800]!.withOpacity(0.05),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -196,12 +234,21 @@ class _DietCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'PROGRESO DEL DÍA', 
-                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5, color: AppColors.textMuted)
+                          'PROGRESO DEL DÍA',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 10,
+                            letterSpacing: 0.5,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                         Text(
-                          '${(progressVal * 100).toInt()}%', 
-                          style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 13)
+                          '${(progressVal * 100).toInt()}%',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -219,10 +266,15 @@ class _DietCard extends StatelessWidget {
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 500),
                           height: 10,
-                          width: (MediaQuery.of(context).size.width - 80) * progressVal,
+                          width:
+                              (MediaQuery.of(context).size.width - 80) *
+                              progressVal,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [AppColors.primary, AppColors.primaryLight],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primaryLight,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(5),
                             boxShadow: [
@@ -259,9 +311,9 @@ class _MacroItem extends StatelessWidget {
   final Color bgColor;
 
   const _MacroItem({
-    required this.label, 
-    required this.value, 
-    required this.icon, 
+    required this.label,
+    required this.value,
+    required this.icon,
     required this.color,
     required this.bgColor,
   });
@@ -278,8 +330,19 @@ class _MacroItem extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-          Text(label, style: TextStyle(color: AppColors.textMuted.withOpacity(0.6), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.2)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.textMuted.withOpacity(0.6),
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.2,
+            ),
+          ),
         ],
       ),
     );
@@ -305,10 +368,14 @@ class _MealTile extends StatelessWidget {
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: meal.completed ? Colors.green.withOpacity(0.06) : Colors.white,
+            color: meal.completed
+                ? Colors.green.withOpacity(0.06)
+                : Colors.white,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: meal.completed ? Colors.green.withOpacity(0.2) : Colors.black.withOpacity(0.03),
+              color: meal.completed
+                  ? Colors.green.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.03),
             ),
           ),
           child: Row(
@@ -317,7 +384,9 @@ class _MealTile extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: meal.completed ? Colors.green.withOpacity(0.1) : AppColors.background.withOpacity(0.5),
+                  color: meal.completed
+                      ? Colors.green.withOpacity(0.1)
+                      : AppColors.background.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Center(
@@ -340,26 +409,36 @@ class _MealTile extends StatelessWidget {
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1,
-                            color: meal.completed ? Colors.green : AppColors.primary,
+                            color: meal.completed
+                                ? Colors.green
+                                : AppColors.primary,
                           ),
                         ),
                         if (meal.mealTime != null) ...[
                           const SizedBox(width: 8),
                           Text(
                             '• ${meal.mealTime}',
-                            style: TextStyle(color: AppColors.textMuted.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                              color: AppColors.textMuted.withOpacity(0.4),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ],
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      meal.foods,
+                      meal.formattedFoods,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: meal.completed ? AppColors.textMuted : AppColors.text,
-                        decoration: meal.completed ? TextDecoration.lineThrough : null,
+                        color: meal.completed
+                            ? AppColors.textMuted
+                            : AppColors.text,
+                        decoration: meal.completed
+                            ? TextDecoration.lineThrough
+                            : null,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -368,7 +447,11 @@ class _MealTile extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 2.0),
                         child: Text(
                           '${meal.calories} KCAL',
-                          style: TextStyle(color: AppColors.textMuted.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.w900),
+                          style: TextStyle(
+                            color: AppColors.textMuted.withOpacity(0.5),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ),
                   ],
@@ -379,9 +462,13 @@ class _MealTile extends StatelessWidget {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: meal.completed ? Colors.green : Colors.grey.withOpacity(0.08),
+                  color: meal.completed
+                      ? Colors.green
+                      : Colors.grey.withOpacity(0.08),
                   border: Border.all(
-                    color: meal.completed ? Colors.transparent : Colors.black.withOpacity(0.05),
+                    color: meal.completed
+                        ? Colors.transparent
+                        : Colors.black.withOpacity(0.05),
                   ),
                 ),
                 child: Icon(
@@ -406,4 +493,3 @@ class _MealTile extends StatelessWidget {
     return '🍽️';
   }
 }
-

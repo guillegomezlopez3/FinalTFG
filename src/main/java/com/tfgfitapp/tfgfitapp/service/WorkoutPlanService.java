@@ -223,7 +223,7 @@ public class WorkoutPlanService {
         exercise.setRestSeconds(request.getRestSeconds());
         exercise.setDurationMinutes(request.getDurationMinutes());
         exercise.setNotes(request.getNotes());
-        exercise.setGifUrl(request.getGifUrl());
+        exercise.setImageUrl(request.getImageUrl());
         if (request.getPredefinedExerciseId() != null) {
             predefinedExerciseRepository.findById(request.getPredefinedExerciseId())
                     .ifPresent(exercise::setPredefinedExercise);
@@ -250,7 +250,7 @@ public class WorkoutPlanService {
         if (request.getRestSeconds() != null)     exercise.setRestSeconds(request.getRestSeconds());
         if (request.getDurationMinutes() != null) exercise.setDurationMinutes(request.getDurationMinutes());
         if (request.getNotes() != null)           exercise.setNotes(request.getNotes());
-        if (request.getGifUrl() != null)          exercise.setGifUrl(request.getGifUrl());
+        if (request.getImageUrl() != null)        exercise.setImageUrl(request.getImageUrl());
         if (request.getPredefinedExerciseId() != null) {
             predefinedExerciseRepository.findById(request.getPredefinedExerciseId())
                     .ifPresent(exercise::setPredefinedExercise);
@@ -386,7 +386,7 @@ public class WorkoutPlanService {
         response.setRestSeconds(exercise.getRestSeconds());
         response.setDurationMinutes(exercise.getDurationMinutes());
         response.setNotes(exercise.getNotes());
-        response.setGifUrl(exercise.getGifUrl());
+        response.setImageUrl(exercise.getImageUrl() != null ? exercise.getImageUrl() : (exercise.getPredefinedExercise() != null ? exercise.getPredefinedExercise().getImageUrl() : null));
         if (exercise.getPredefinedExercise() != null) {
             response.setPredefinedExerciseId(exercise.getPredefinedExercise().getId());
         }

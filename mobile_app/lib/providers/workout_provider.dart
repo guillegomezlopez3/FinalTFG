@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/workout.dart';
 import '../models/exercise_progress.dart';
 import '../network/workout_service.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Proveedor para la gestión de rutinas y ejercicios.
 class WorkoutProvider extends ChangeNotifier {
@@ -14,8 +16,12 @@ class WorkoutProvider extends ChangeNotifier {
   /// Mensaje de error.
   String? _errorMessage;
 
-  /// Conjunto de nombres de ejercicios completados en la sesión actual.
-  final Set<String> _completedExerciseNames = {};
+  /// Mapa que asocia el nombre del ejercicio con la fecha (milisegundos desde epoch) en la que se completó.
+  Map<String, int> _completedExercisesMap = {};
+
+  WorkoutProvider() {
+    _loadCompletedExercises();
+  }
 
   /// Obtiene los planes.
   List<WorkoutPlan> get workoutPlans => _workoutPlans;
@@ -26,8 +32,47 @@ class WorkoutProvider extends ChangeNotifier {
   /// Obtiene el mensaje de error.
   String? get errorMessage => _errorMessage;
   
-  /// Obtiene los ejercicios completados.
-  Set<String> get completedExerciseNames => _completedExerciseNames;
+  /// Obtiene los nombres de los ejercicios que están completados y no han caducado (menos de 24h).
+  Set<String> get completedExerciseNames => _completedExercisesMap.keys.toSet();
+
+  /// Carga desde SharedPreferences el estado de los ejercicios completados y elimina los que tienen > 24 horas
+  Future<void> _loadCompletedExercises() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? savedData = prefs.getString('completed_exercises');
+
+    if (savedData != null) {
+      try {
+        final decodedMap = json.decode(savedData) as Map<String, dynamic>;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final int twentyFourHours = 24 * 60 * 60 * 1000;
+
+        final Map<String, int> activeExercises = {};
+
+        decodedMap.forEach((key, value) {
+          final int timestamp = value as int;
+          // Si el tiempo transcurrido es menor a 24h, lo mantenemos
+          if (now - timestamp < twentyFourHours) {
+            activeExercises[key] = timestamp;
+          }
+        });
+
+        _completedExercisesMap = activeExercises;
+
+        // Guardamos de nuevo para "limpiar" los caducados del disco
+        prefs.setString('completed_exercises', json.encode(_completedExercisesMap));
+        notifyListeners();
+      } catch (e) {
+        // En caso de error, reiniciamos el mapa
+        _completedExercisesMap = {};
+      }
+    }
+  }
+
+  /// Guarda en disco el mapa de completados actual
+  Future<void> _saveCompletedExercisesToStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('completed_exercises', json.encode(_completedExercisesMap));
+  }
 
   /// Carga los planes de un [clientId].
   Future<void> fetchClientWorkoutPlans(int clientId) async {
@@ -52,7 +97,8 @@ class WorkoutProvider extends ChangeNotifier {
   Future<bool> logProgress(ExerciseProgress progress) async {
     final success = await WorkoutService.logExerciseProgress(progress);
     if (success) {
-      _completedExerciseNames.add(progress.exerciseName);
+      _completedExercisesMap[progress.exerciseName] = DateTime.now().millisecondsSinceEpoch;
+      await _saveCompletedExercisesToStorage();
       notifyListeners();
     }
     return success;

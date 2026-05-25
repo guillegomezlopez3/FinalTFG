@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/user_profile.dart';
@@ -177,7 +176,7 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.badge_outlined, 'Identificación', 'ID: ${user.id}'),
+          _buildInfoRow(Icons.badge_outlined, 'Identificación', user.name),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Divider(height: 1),
@@ -241,13 +240,13 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _buildMenuTile(Icons.settings_outlined, 'Ajustes de Cuenta', () {}),
+          _buildMenuTile(Icons.settings_outlined, 'Ajustes de Cuenta', () => _showPasswordChangeBottomSheet(context)),
           const Divider(height: 1, indent: 64),
-          _buildMenuTile(Icons.notifications_none_rounded, 'Notificaciones', () {}),
+          _buildMenuTile(Icons.notifications_none_rounded, 'Notificaciones', () => _showNotificationsBottomSheet(context)),
           const Divider(height: 1, indent: 64),
           _buildMenuTile(Icons.security_rounded, 'Privacidad y Seguridad', () {}),
           const Divider(height: 1, indent: 64),
-          _buildMenuTile(Icons.help_outline_rounded, 'Centro de Ayuda', () {}),
+          _buildMenuTile(Icons.help_outline_rounded, 'Centro de Ayuda', () => _showHelpCenterDialog(context)),
         ],
       ),
     );
@@ -288,5 +287,115 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-}
 
+  void _showPasswordChangeBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, top: 24, left: 24, right: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Cambiar Contraseña', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              const TextField(
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Contraseña Actual', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+              const TextField(
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Nueva Contraseña', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Actualizar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showNotificationsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Preferencias de Notificaciones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Nuevos mensajes de chat'),
+                    value: true,
+                    activeColor: AppColors.primary,
+                    onChanged: (val) => setState(() {}),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Cambios en la dieta asignada'),
+                    value: true,
+                    activeColor: AppColors.primary,
+                    onChanged: (val) => setState(() {}),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Cambios en rutina de entrenamiento'),
+                    value: true,
+                    activeColor: AppColors.primary,
+                    onChanged: (val) => setState(() {}),
+                  ),
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
+  }
+
+  void _showHelpCenterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Centro de Ayuda', textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.support_agent_rounded, size: 60, color: AppColors.primary),
+              const SizedBox(height: 16),
+              const Text('Para soporte, dudas o consultas respecto a la aplicación, ponte en contacto con nosotros al siguiente correo electrónico:', textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              const Text('guillegomezlopez3@gmail.com', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.primary)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

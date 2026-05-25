@@ -174,4 +174,69 @@ public class EmailService {
             </html>
             """.formatted(name, email, password, confirmUrl);
     }
+
+    /**
+     * Envía un email de bienvenida y activación a un nuevo entrenador.
+     * 
+     * @param trainerUser Usuario del entrenador recién registrado.
+     */
+    @Transactional
+    public void sendTrainerWelcomeEmail(User trainerUser) {
+        // 1. Generar token de confirmación (válido 48h)
+        String tokenValue = java.util.UUID.randomUUID().toString();
+        EmailConfirmationToken token = new EmailConfirmationToken(
+                tokenValue,
+                trainerUser,
+                LocalDateTime.now().plusHours(48)
+        );
+        tokenRepository.save(token);
+
+        // 2. Construir contenido del email
+        String confirmUrl = baseUrl + "/api/auth/confirm?token=" + tokenValue;
+        String subject = "¡Bienvenido a TFGFitApp! Activa tu cuenta de Entrenador";
+        String htmlContent = buildTrainerWelcomeEmailHtml(trainerUser.getName(), confirmUrl);
+
+        // 3. Enviar o logear
+        if (emailEnabled) {
+            sendHtmlEmail(trainerUser.getEmail(), subject, htmlContent);
+        } else {
+            log.info("╔══════════════════════════════════════════════════════════════");
+            log.info("║ 📧 EMAIL DE ACTIVACIÓN DE ENTRENADOR (modo consola - app.email.enabled=false)");
+            log.info("║ Para: {}", trainerUser.getEmail());
+            log.info("║ Nombre: {}", trainerUser.getName());
+            log.info("║ Enlace de confirmación: {}", confirmUrl);
+            log.info("╚══════════════════════════════════════════════════════════════");
+        }
+    }
+
+    private String buildTrainerWelcomeEmailHtml(String name, String confirmUrl) {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="font-family:'Segoe UI',Arial,sans-serif;background:#f4f5f7;margin:0;padding:0;">
+                <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
+                    <div style="background:linear-gradient(135deg,#FF7A00,#FF5722);padding:32px 24px;text-align:center;">
+                        <h1 style="color:#fff;margin:0;font-size:24px;">🏋️ TFGFitApp</h1>
+                        <p style="color:rgba(255,255,255,.85);margin:8px 0 0;font-size:14px;">Plataforma de Entrenadores Profesionales</p>
+                    </div>
+                    <div style="padding:32px 24px;">
+                        <h2 style="color:#1a1a2e;margin:0 0 16px;">¡Hola, %s!</h2>
+                        <p style="color:#555;line-height:1.6;">Gracias por registrarte en TFGFitApp para tus 10 días de prueba gratuita. Para completar tu registro y poder acceder a tu cuenta, por favor confirma tu dirección de correo electrónico haciendo clic en el siguiente botón:</p>
+                        <div style="text-align:center;margin:28px 0;">
+                            <a href="%s" style="display:inline-block;background:#FF7A00;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;box-shadow:0 4px 12px rgba(255,122,0,0.2);">
+                                ✅ Activar mi cuenta de Entrenador
+                            </a>
+                        </div>
+                        <p style="color:#555;line-height:1.6;">Una vez activada la cuenta, podrás iniciar sesión con las credenciales que creaste durante el registro.</p>
+                        <p style="color:#999;font-size:12px;text-align:center;">Este enlace expira en 48 horas. Si no realizaste este registro, puedes ignorar este correo de forma segura.</p>
+                    </div>
+                    <div style="background:#f8f9fa;padding:16px 24px;text-align:center;">
+                        <p style="color:#999;font-size:12px;margin:0;">© 2026 TFGFitApp · Trabajo de Fin de Grado</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(name, confirmUrl);
+    }
 }

@@ -76,7 +76,7 @@ class Exercise {
   final int? restSeconds;
   final int? durationMinutes;
   final String? notes;
-  final String? gifUrl;
+  final String? imageUrl;
   final int? predefinedExerciseId;
 
   Exercise({
@@ -87,7 +87,7 @@ class Exercise {
     this.restSeconds,
     this.durationMinutes,
     this.notes,
-    this.gifUrl,
+    this.imageUrl,
     this.predefinedExerciseId,
   });
 
@@ -100,8 +100,15 @@ class Exercise {
       restSeconds: json['restSeconds'],
       durationMinutes: json['durationMinutes'],
       notes: json['notes'],
-      gifUrl: json['gifUrl'],
+      imageUrl: json['imageUrl'],
       predefinedExerciseId: json['predefinedExerciseId'],
     );
+  }
+
+  /// Resuelve la URL absoluta de la imagen técnica para mostrarla en la app.
+  String? get fullImageUrl {
+    if (imageUrl == null || imageUrl!.isEmpty) return null;
+    if (imageUrl!.startsWith('http')) return imageUrl;
+    return 'http://10.0.2.2:8081$imageUrl';
   }
 }

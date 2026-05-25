@@ -14,7 +14,8 @@ class WorkoutService {
       final response = await ApiClient.get('$workoutPlansEndpoint/client/$clientId');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        final Map<String, dynamic> responseData = json.decode(utf8.decode(response.bodyBytes));
+        final List<dynamic> data = responseData['content'] ?? [];
         return data.map((json) => WorkoutPlan.fromJson(json)).toList();
       }
       return [];

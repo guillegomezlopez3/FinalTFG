@@ -28,15 +28,15 @@ public class PredefinedExercise {
     @Column(length = 100)
     private String equipment;
 
-    @Column(length = 255)
-    private String gifUrl;
+    @Column(name = "image_url", length = 255)
+    private String imageUrl;
 
-    public PredefinedExercise(Long id, String name, MuscleGroup muscleGroup, String equipment, String gifUrl) {
+    public PredefinedExercise(Long id, String name, MuscleGroup muscleGroup, String equipment, String imageUrl) {
         this.id = id;
         this.name = name;
         this.muscleGroup = muscleGroup;
         this.equipment = equipment;
-        this.gifUrl = gifUrl;
+        this.imageUrl = imageUrl;
     }
 
     public PredefinedExercise(Long id, String name, MuscleGroup muscleGroup, String equipment) {
@@ -44,7 +44,7 @@ public class PredefinedExercise {
         this.name = name;
         this.muscleGroup = muscleGroup;
         this.equipment = equipment;
-        this.gifUrl = null;
+        this.imageUrl = null;
     }
 
     public Long getId() { return id; }
@@ -55,6 +55,6 @@ public class PredefinedExercise {
     public void setMuscleGroup(MuscleGroup muscleGroup) { this.muscleGroup = muscleGroup; }
     public String getEquipment() { return equipment; }
     public void setEquipment(String equipment) { this.equipment = equipment; }
-    public String getGifUrl() { return gifUrl; }
-    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

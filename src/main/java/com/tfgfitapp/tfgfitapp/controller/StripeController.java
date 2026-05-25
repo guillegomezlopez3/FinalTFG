@@ -10,7 +10,9 @@ import com.tfgfitapp.tfgfitapp.entity.Trainer;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
+import com.tfgfitapp.tfgfitapp.repository.UserRepository;
 import com.tfgfitapp.tfgfitapp.service.StripeService;
+import com.tfgfitapp.tfgfitapp.service.EmailService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +39,18 @@ public class StripeController {
 
     private final StripeService stripeService;
     private final TrainerRepository trainerRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
 
-    public StripeController(StripeService stripeService, TrainerRepository trainerRepository) {
+    public StripeController(StripeService stripeService, TrainerRepository trainerRepository, 
+                            UserRepository userRepository, EmailService emailService) {
         this.stripeService = stripeService;
         this.trainerRepository = trainerRepository;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -87,6 +94,29 @@ public class StripeController {
         trainer.setSubscriptionActive(true);
         trainerRepository.save(trainer);
         return ResponseEntity.ok(Map.of("message", "Suscripción activada con éxito"));
+    }
+
+    @PostMapping("/activate-trainer-public")
+    public ResponseEntity<Map<String, String>> activateTrainerPublic(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "El email es requerido"));
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        Trainer trainer = trainerRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de entrenador no encontrado"));
+
+        trainer.setSubscriptionActive(true);
+        trainerRepository.save(trainer);
+
+        // Enviar email de activación/bienvenida al completarse el pago
+        emailService.sendTrainerWelcomeEmail(user);
+
+        log.info("Entrenador activado mediante pasarela y email de activación enviado a: {}", email);
+        return ResponseEntity.ok(Map.of("message", "Suscripción activada con éxito y correo de confirmación enviado"));
     }
 
     /**
@@ -155,6 +185,9 @@ public class StripeController {
                 }
                 trainerRepository.save(trainer);
                 log.info("Suscripción activada para trainer ID: {}", trainer.getId());
+                
+                // Enviar email de activación tras pago de Stripe real en webhook
+                emailService.sendTrainerWelcomeEmail(trainer.getUser());
             });
         }
     }

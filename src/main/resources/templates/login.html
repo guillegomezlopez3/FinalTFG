@@ -74,6 +74,14 @@
     /* Redirigir si ya tiene sesión */
     if (isLoggedIn()) window.location.href = '/dashboard';
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const alertBox = document.getElementById('alert-box');
+        if (urlParams.get('payment_completed') === 'true') {
+            showAlert(alertBox, '¡Pago completado con éxito! Por favor, revisa tu correo electrónico para activar tu cuenta antes de iniciar sesión.', 'success');
+        }
+    });
+
     function togglePass() {
         const inp = document.getElementById('password');
         const icon = document.getElementById('eye-icon');

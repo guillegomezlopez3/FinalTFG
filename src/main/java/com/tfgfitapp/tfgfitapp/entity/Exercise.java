@@ -52,8 +52,8 @@ public class Exercise {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    @Column(length = 255)
-    private String gifUrl;
+    @Column(name = "image_url", length = 255)
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "predefined_exercise_id")
@@ -91,10 +91,10 @@ public class Exercise {
     public String getNotes() { return notes; }
     /** @param notes Las nuevas notas. */
     public void setNotes(String notes) { this.notes = notes; }
-    /** @return URL de la animación GIF del ejercicio. */
-    public String getGifUrl() { return gifUrl; }
-    /** @param gifUrl La nueva URL del GIF. */
-    public void setGifUrl(String gifUrl) { this.gifUrl = gifUrl; }
+    /** @return URL de la imagen del ejercicio. */
+    public String getImageUrl() { return imageUrl; }
+    /** @param imageUrl La nueva URL de la imagen. */
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     /** @return El ejercicio predefinido base (si aplica). */
     public PredefinedExercise getPredefinedExercise() { return predefinedExercise; }
     /** @param predefinedExercise El ejercicio predefinido a asociar. */

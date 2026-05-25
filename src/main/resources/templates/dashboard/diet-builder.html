@@ -372,7 +372,7 @@ function renderOptions(mealId) {
 
 function mapDbToBuilder(mealsArray) {
     mealsArray.forEach(m => {
-        let type = m.mealType;
+        let type = m.mealType ? m.mealType.toUpperCase() : '';
         if(builderData[type]) {
             builderData[type].exists = true;
             builderData[type].dbId = m.id;

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Modelo que representa un plan nutricional (Dieta).
 class Diet {
   final int id;
@@ -26,9 +28,8 @@ class Diet {
       startDate: json['startDate'],
       endDate: json['endDate'],
       active: json['active'] ?? true,
-      meals: (json['meals'] as List?)
-              ?.map((m) => DietMeal.fromJson(m))
-              .toList() ??
+      meals:
+          (json['meals'] as List?)?.map((m) => DietMeal.fromJson(m)).toList() ??
           [],
     );
   }
@@ -60,6 +61,42 @@ class DietMeal {
     this.completed = false,
   });
 
+  String get formattedFoods {
+    try {
+      final parsed = jsonDecode(foods);
+      if (parsed is List) {
+        final buffer = StringBuffer();
+        for (var option in parsed) {
+          if (option is Map) {
+            final optionName = option['name'] ?? 'Opción';
+            buffer.writeln('• $optionName:');
+            final items = option['items'];
+            if (items is List) {
+              for (var item in items) {
+                if (item is Map) {
+                  final name = item['name'] ?? '';
+                  final grams = item['grams'] ?? '';
+                  final kcal = item['kcal'] ?? '';
+                  final notes = item['notes'] ?? '';
+
+                  buffer.write('  - $name');
+                  if (grams.toString().isNotEmpty) buffer.write(' ($grams)');
+                  if (kcal.toString().isNotEmpty) buffer.write(' - $kcal kcal');
+                  if (notes.toString().isNotEmpty) buffer.write(' ($notes)');
+                  buffer.writeln();
+                }
+              }
+            }
+          }
+        }
+        return buffer.toString().trim();
+      }
+    } catch (_) {
+      // Si no es un JSON válido, devolvemos el texto plano original
+    }
+    return foods;
+  }
+
   factory DietMeal.fromJson(Map<String, dynamic> json) {
     return DietMeal(
       id: json['id'],
@@ -68,7 +105,9 @@ class DietMeal {
       foods: json['foods'] ?? '',
       calories: json['calories'],
       notes: json['notes'],
-      protein: json['protein'] != null ? (json['protein'] as num).toDouble() : null,
+      protein: json['protein'] != null
+          ? (json['protein'] as num).toDouble()
+          : null,
       carbs: json['carbs'] != null ? (json['carbs'] as num).toDouble() : null,
       fats: json['fats'] != null ? (json['fats'] as num).toDouble() : null,
       completed: json['completed'] ?? false,

@@ -127,201 +127,314 @@ class _WorkoutPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        plan.title,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.text,
-                        ),
-                      ),
-                    ),
-                    if (plan.active)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'ACTIVO',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 10,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => _WorkoutPlanDetailScreen(plan: plan)));
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          plan.title,
+                          style: const TextStyle(
+                            fontSize: 22,
                             fontWeight: FontWeight.w900,
+                            color: AppColors.text,
                           ),
                         ),
                       ),
-                  ],
-                ),
-                if (plan.objective != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      plan.objective!,
-                      style: TextStyle(
-                        color: AppColors.textMuted.withOpacity(0.7),
-                        fontWeight: FontWeight.w500,
+                      if (plan.active)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'ACTIVO',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (plan.objective != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        plan.objective!,
+                        style: TextStyle(
+                          color: AppColors.textMuted.withOpacity(0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${plan.workoutDays.length} días de entrenamiento',
+                        style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.primary),
+                    ],
                   ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pantalla de detalles del plan (Fase 2: Días)
+class _WorkoutPlanDetailScreen extends StatelessWidget {
+  final WorkoutPlan plan;
+  const _WorkoutPlanDetailScreen({required this.plan});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.text),
+        title: Text(plan.title, style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w900)),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: plan.workoutDays.length,
+        itemBuilder: (context, index) {
+          final day = plan.workoutDays[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))],
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              leading: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.fitness_center_rounded, color: AppColors.primary),
+              ),
+              title: Text(day.dayOfWeek, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+              subtitle: Text('${day.exercises.length} ejercicios • ${day.focus ?? "General"}', style: const TextStyle(color: AppColors.textMuted)),
+              trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => _WorkoutDayDetailScreen(day: day, planTitle: plan.title)));
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Pantalla de detalle de un día (Fase 3: Ejercicios Deslizables)
+class _WorkoutDayDetailScreen extends StatefulWidget {
+  final WorkoutDay day;
+  final String planTitle;
+  const _WorkoutDayDetailScreen({required this.day, required this.planTitle});
+
+  @override
+  State<_WorkoutDayDetailScreen> createState() => _WorkoutDayDetailScreenState();
+}
+
+class _WorkoutDayDetailScreenState extends State<_WorkoutDayDetailScreen> {
+  final PageController _pageController = PageController(viewportFraction: 0.85);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.text),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.day.dayOfWeek, style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w900, fontSize: 18)),
+            Text(widget.planTitle, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                const Icon(Icons.swipe_rounded, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text('Desliza para ver los ejercicios', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textMuted.withOpacity(0.8))),
               ],
             ),
           ),
-          const Divider(height: 1, indent: 24, endIndent: 24),
-          ...plan.workoutDays.map((day) => _WorkoutDayTile(day: day)),
           const SizedBox(height: 16),
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: widget.day.exercises.length,
+              itemBuilder: (context, index) {
+                final exercise = widget.day.exercises[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: _PremiumExerciseCard(exercise: exercise),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
   }
 }
 
-/// Tile expandible que muestra los ejercicios de un día específico.
-class _WorkoutDayTile extends StatelessWidget {
-  final WorkoutDay day;
-
-  const _WorkoutDayTile({required this.day});
-
-  @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        title: Text(
-          day.dayOfWeek,
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: AppColors.text,
-          ),
-        ),
-        subtitle: Text(
-          day.focus ?? 'Enfoque general',
-          style: TextStyle(color: AppColors.textMuted.withOpacity(0.6), fontSize: 13),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.calendar_today_rounded, size: 18, color: AppColors.primary),
-        ),
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: day.exercises.map((ex) => _ExerciseItem(exercise: ex)).toList(),
-      ),
-    );
-  }
-}
-
-/// Elemento de lista interactivo para un ejercicio individual.
-class _ExerciseItem extends StatelessWidget {
+/// Tarjeta premium para un ejercicio deslizable en el PageView
+class _PremiumExerciseCard extends StatelessWidget {
   final Exercise exercise;
-
-  const _ExerciseItem({required this.exercise});
-
-  void _showExerciseDetails(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _ExerciseDetailSheet(exercise: exercise),
-    );
-  }
+  const _PremiumExerciseCard({required this.exercise});
 
   @override
   Widget build(BuildContext context) {
     final completed = context.watch<WorkoutProvider>().completedExerciseNames.contains(exercise.name);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: completed ? Colors.green.withOpacity(0.08) : AppColors.background.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: completed ? Colors.green.withOpacity(0.2) : Colors.transparent,
-          width: 1,
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => _ExerciseDetailSheet(exercise: exercise),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: completed ? Colors.green.withOpacity(0.5) : Colors.transparent, width: 2),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 24, offset: const Offset(0, 10))
+          ],
         ),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: exercise.gifUrl != null && exercise.gifUrl!.isNotEmpty
-                ? Image.network(
-                    exercise.gifUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.fitness_center, color: AppColors.primary),
-                  )
-                : const Icon(Icons.fitness_center, color: AppColors.primary),
-          ),
-        ),
-        title: Text(
-          exercise.name,
-          style: TextStyle(
-            fontWeight: FontWeight.w800, 
-            fontSize: 15,
-            decoration: completed ? TextDecoration.lineThrough : null,
-            color: completed ? AppColors.textMuted : AppColors.text,
-          ),
-        ),
-        subtitle: Text(
-          '${exercise.sets} series × ${exercise.reps} • ${exercise.restSeconds}s desc.',
-          style: TextStyle(color: AppColors.textMuted.withOpacity(0.8), fontSize: 13),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: completed ? Colors.green : Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-              )
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 11,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    exercise.fullImageUrl != null && exercise.fullImageUrl!.isNotEmpty
+                        ? Image.network(
+                            exercise.fullImageUrl!, 
+                            fit: BoxFit.contain, // <-- Cambiado de cover a contain para que la foto se vea entera y bien adaptada
+                            alignment: Alignment.center,
+                            errorBuilder: (c,e,s) => const Icon(Icons.fitness_center, size: 64, color: Colors.grey)
+                          )
+                        : Container(color: AppColors.background, child: const Icon(Icons.fitness_center, size: 64, color: AppColors.primary)),
+                    if (completed)
+                      Positioned(
+                        top: 16, right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                          child: const Icon(Icons.check_rounded, color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 9,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(exercise.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.text, height: 1.1)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStat(Icons.repeat_rounded, '${exercise.sets}x${exercise.reps}', 'Series x Reps'),
+                          _buildStat(Icons.timer_outlined, '${exercise.restSeconds}s', 'Descanso'),
+                        ],
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => _ExerciseDetailSheet(exercise: exercise),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                          child: Text(completed ? 'VER REGISTRO' : 'REGISTRAR PROGRESO', style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-          child: Icon(
-            completed ? Icons.check_rounded : Icons.play_arrow_rounded, 
-            color: completed ? Colors.white : AppColors.primary, 
-            size: 20,
-          ),
         ),
-        onTap: () => _showExerciseDetails(context),
       ),
+    );
+  }
+
+  Widget _buildStat(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 24),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        Text(label, style: const TextStyle(color: AppColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
+      ],
     );
   }
 }
@@ -494,10 +607,10 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(28),
-                  child: widget.exercise.gifUrl != null && widget.exercise.gifUrl!.isNotEmpty
+                  child: widget.exercise.fullImageUrl != null && widget.exercise.fullImageUrl!.isNotEmpty
                       ? Image.network(
-                          widget.exercise.gifUrl!,
-                          fit: BoxFit.cover,
+                          widget.exercise.fullImageUrl!,
+                          fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Center(
@@ -511,7 +624,7 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                             );
                           },
                           errorBuilder: (context, error, stackTrace) => const Center(
-                            child: Icon(Icons.videocam_off_rounded, size: 48, color: Colors.grey),
+                            child: Icon(Icons.image_not_supported_rounded, size: 48, color: Colors.grey),
                           ),
                         )
                       : const Center(
@@ -520,7 +633,7 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
                             children: [
                               Icon(Icons.fitness_center_rounded, size: 48, color: Colors.grey),
                               SizedBox(height: 8),
-                              Text('No hay GIF disponible', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+                              Text('Sin imagen técnica', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -678,4 +791,3 @@ class _ExerciseDetailSheetState extends State<_ExerciseDetailSheet> {
     );
   }
 }
-

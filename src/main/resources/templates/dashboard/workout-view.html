@@ -250,6 +250,46 @@
             background: var(--orange);
         }
 
+        /* Layout de dos columnas para pantallas medianas/grandes con imagen */
+        .card-columns-container.has-image-layout {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            text-align: left;
+        }
+        .card-left-column {
+            flex: 1.2;
+            max-width: 450px;
+            width: 100%;
+        }
+        .card-right-column {
+            flex: 1;
+            width: 100%;
+        }
+        .card-left-column .exercise-image-wrapper img {
+            width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+        
+        @media (max-width: 768px) {
+            .card-columns-container.has-image-layout {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+            }
+            .card-left-column {
+                max-width: 100%;
+            }
+            .card-left-column .exercise-image-wrapper img {
+                max-height: 200px;
+            }
+        }
+
         @media (max-width: 600px) {
             .premium-card { padding: 25px; }
             .stats-grid { gap: 10px; }
@@ -398,46 +438,58 @@
         container.innerHTML = exercises.map((ex, idx) => `
             <div class="exercise-slide ${idx === 0 ? 'active' : ''}" id="slide-${idx}">
                 <div class="premium-card">
-                    <div class="exercise-header">
-                        <div class="category">${day.focus || 'Entrenamiento'}</div>
-                        <h2>
-                            ${ex.name}
-                            <i class="bi bi-info-circle info-icon" onclick="showExerciseInfo('${ex.name.replace(/'/g, "\\'")}', '${(ex.notes || 'Sin instrucciones adicionales.').replace(/'/g, "\\'").replace(/\n/g, "\\n")}')"></i>
-                        </h2>
-                    </div>
-
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="value">${ex.sets || '—'}</span>
-                            <span class="label">Series</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="value">${ex.reps || '—'}</span>
-                            <span class="label">Reps</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="value">${ex.restSeconds || '0'}s</span>
-                            <span class="label">Descanso</span>
-                        </div>
-                    </div>
-
-                    <div class="progress-input-section">
-                        <div class="input-group-premium">
-                            <div class="input-item">
-                                <label>PESO (KG)</label>
-                                <input type="number" id="weight-${ex.id}" placeholder="0.0" step="0.5">
-                            </div>
-                            <div class="input-item">
-                                <label>REPS</label>
-                                <input type="number" id="reps-${ex.id}" placeholder="${ex.reps}">
+                    <div class="card-columns-container ${ex.imageUrl ? 'has-image-layout' : ''}">
+                        ${ex.imageUrl ? `
+                        <div class="card-left-column">
+                            <div class="exercise-image-wrapper">
+                                <img src="${ex.imageUrl}" alt="${ex.name}">
                             </div>
                         </div>
-                        <button class="btn-save-progress" id="btn-save-${ex.id}" onclick="saveExerciseProgress(${ex.id}, ${ex.predefinedExerciseId || 'null'}, '${ex.name.replace(/'/g, "\\'")}')">
-                            <i class="bi bi-cloud-arrow-up"></i> Guardar Progreso
-                        </button>
-                        <button class="btn-view-history" onclick="showExerciseHistory(${ex.predefinedExerciseId || 'null'}, '${ex.name.replace(/'/g, "\\'")}')">
-                            <i class="bi bi-clock-history"></i> Ver Historial
-                        </button>
+                        ` : ''}
+
+                        <div class="card-right-column">
+                            <div class="exercise-header">
+                                <div class="category">${day.focus || 'Entrenamiento'}</div>
+                                <h2>
+                                    ${ex.name}
+                                    <i class="bi bi-info-circle info-icon" onclick="showExerciseInfo('${ex.name.replace(/'/g, "\\'")}', '${(ex.notes || 'Sin instrucciones adicionales.').replace(/'/g, "\\'").replace(/\n/g, "\\n")}')"></i>
+                                </h2>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="value">${ex.sets || '—'}</span>
+                                    <span class="label">Series</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="value">${ex.reps || '—'}</span>
+                                    <span class="label">Reps</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="value">${ex.restSeconds || '0'}s</span>
+                                    <span class="label">Descanso</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-input-section">
+                                <div class="input-group-premium">
+                                    <div class="input-item">
+                                        <label>PESO (KG)</label>
+                                        <input type="number" id="weight-${ex.id}" placeholder="0.0" step="0.5">
+                                    </div>
+                                    <div class="input-item">
+                                        <label>REPS</label>
+                                        <input type="number" id="reps-${ex.id}" placeholder="${ex.reps}">
+                                    </div>
+                                </div>
+                                <button class="btn-save-progress" id="btn-save-${ex.id}" onclick="saveExerciseProgress(${ex.id}, ${ex.predefinedExerciseId || 'null'}, '${ex.name.replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-cloud-arrow-up"></i> Guardar Progreso
+                                </button>
+                                <button class="btn-view-history" onclick="showExerciseHistory(${ex.predefinedExerciseId || 'null'}, '${ex.name.replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-clock-history"></i> Ver Historial
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

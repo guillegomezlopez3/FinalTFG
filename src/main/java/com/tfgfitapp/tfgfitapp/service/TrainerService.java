@@ -16,8 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Servicio para la gestión de perfiles de Entrenadores.
  * 
- * Proporciona lógica para que los entrenadores actualicen su información profesional
- * y para que los administradores supervisen la lista de entrenadores registrados.
+ * Proporciona lógica para que los entrenadores actualicen su información
+ * profesional
+ * y para que los administradores supervisen la lista de entrenadores
+ * registrados.
  */
 @Service
 public class TrainerService {
@@ -45,7 +47,7 @@ public class TrainerService {
     /**
      * Actualiza la información profesional del perfil del entrenador.
      * 
-     * @param request Datos de actualización (especialidad, descripción, etc.).
+     * @param request     Datos de actualización (especialidad, descripción, etc.).
      * @param currentUser Entrenador que realiza la actualización.
      * @return El perfil del entrenador actualizado.
      */
@@ -53,9 +55,12 @@ public class TrainerService {
     public TrainerResponse updateMyProfile(TrainerUpdateRequest request, User currentUser) {
         Trainer trainer = findByUserIdOrThrow(currentUser.getId());
 
-        if (request.getPhone() != null)       trainer.setPhone(request.getPhone());
-        if (request.getSpecialty() != null)   trainer.setSpecialty(request.getSpecialty());
-        if (request.getDescription() != null) trainer.setDescription(request.getDescription());
+        if (request.getPhone() != null)
+            trainer.setPhone(request.getPhone());
+        if (request.getSpecialty() != null)
+            trainer.setSpecialty(request.getSpecialty());
+        if (request.getDescription() != null)
+            trainer.setDescription(request.getDescription());
 
         return toResponse(trainerRepository.save(trainer));
     }
@@ -102,4 +107,3 @@ public class TrainerService {
         return response;
     }
 }
-

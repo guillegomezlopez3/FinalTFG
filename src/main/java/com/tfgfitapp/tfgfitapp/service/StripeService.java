@@ -31,6 +31,9 @@ public class StripeService {
     @Value("${stripe.price.client-monthly}")
     private String clientMonthlyPriceId;
 
+    @Value("${stripe.api.key}")
+    private String apiKey;
+
     @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
 
@@ -56,14 +59,20 @@ public class StripeService {
             // 1. Crear Customer en Stripe si no tiene
             String customerId = trainer.getStripeCustomerId();
             if (customerId == null || customerId.isEmpty()) {
-                CustomerCreateParams customerParams = CustomerCreateParams.builder()
-                        .setEmail(trainerUser.getEmail())
-                        .setName(trainerUser.getName())
-                        .putMetadata("trainerId", trainer.getId().toString())
-                        .putMetadata("userId", trainerUser.getId().toString())
-                        .build();
-                Customer customer = Customer.create(customerParams);
-                customerId = customer.getId();
+                if (apiKey != null && !apiKey.contains("MOCK") && !apiKey.contains("*") && !apiKey.contains("AQUI")) {
+                    CustomerCreateParams customerParams = CustomerCreateParams.builder()
+                            .setEmail(trainerUser.getEmail())
+                            .setName(trainerUser.getName())
+                            .putMetadata("trainerId", trainer.getId().toString())
+                            .putMetadata("userId", trainerUser.getId().toString())
+                            .build();
+                    Customer customer = Customer.create(customerParams);
+                    customerId = customer.getId();
+                } else {
+                    // Para desarrollo/mock: Asignar un ID simulado
+                    customerId = "cus_mock_" + trainer.getId();
+                    log.info("Entorno local detectado. Omitiendo llamada real a Stripe API y asignando ID simulado: {}", customerId);
+                }
                 trainer.setStripeCustomerId(customerId);
                 trainer.setTrialEndsAt(LocalDateTime.now().plusDays(trialDays));
                 trainerRepository.save(trainer);

@@ -34,13 +34,14 @@ public class AuthService {
     public AuthService(UserRepository userRepository, TrainerRepository trainerRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService, AuthenticationManager authenticationManager,
-                       StripeService stripeService) {
+                       StripeService stripeService, EmailService emailService) {
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.stripeService = stripeService;
+        this.emailService = emailService;
     }
 
     private final UserRepository userRepository;
@@ -49,6 +50,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final StripeService stripeService;
+    private final EmailService emailService;
 
     /**
      * Registra un nuevo usuario TRAINER en el sistema.
@@ -83,8 +85,8 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.TRAINER); // Siempre es TRAINER por registro público
-        user.setActive(true);
-        user.setEmailConfirmed(true); // Entrenadores no necesitan confirmar
+        user.setActive(false); // No activo hasta confirmar
+        user.setEmailConfirmed(false); // Entrenadores deben confirmar por email
 
         userRepository.save(user);
 
@@ -117,20 +119,18 @@ public class AuthService {
      * @throws org.springframework.security.core.AuthenticationException Si la contraseña es incorrecta.
      */
     public AuthResponse login(LoginRequest request) {
-        // authenticationManager valida email + password, lanza excepción si falla
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-
+        // Primero verificamos si el usuario existe y si su email está confirmado
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // Bypass temporal para desarrollo: No obligar a confirmar email
-        /*
-        if (user.getRole() == Role.CLIENT && !Boolean.TRUE.equals(user.getEmailConfirmed())) {
-            throw new IllegalArgumentException("Confirma tu email primero. Revisa tu bandeja de entrada.");
+        if (!Boolean.TRUE.equals(user.getEmailConfirmed())) {
+            throw new IllegalArgumentException("Debes activar tu cuenta confirmando el correo electrónico que te hemos enviado.");
         }
-        */
+
+        // Si está confirmado, procedemos a autenticar
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
         String token = jwtService.generateToken(user);
 
