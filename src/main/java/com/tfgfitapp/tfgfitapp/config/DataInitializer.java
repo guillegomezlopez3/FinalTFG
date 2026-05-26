@@ -104,17 +104,5 @@ public class DataInitializer implements ApplicationRunner {
             log.error("❌ Error al crear el usuario ADMIN inicial: {}", e.getMessage());
         }
 
-        log.info("ℹ️  Para cargar datos de prueba adicionales, ejecuta el script: datos_prueba_SIMPLE.sql");
-
-        // RESET DE DATOS PARA PRUEBAS
-        log.info("ℹ️  Reseteando contraseñas, activando cuentas y confirmando emails para todos los usuarios...");
-        List<User> allUsers = userRepository.findAll();
-        for (User u : allUsers) {
-            u.setPassword(passwordEncoder.encode("password"));
-            u.setActive(true);
-            u.setEmailConfirmed(true);
-            userRepository.save(u);
-        }
-        log.info("✅ Se han actualizado y activado {} usuarios.", allUsers.size());
     }
 }

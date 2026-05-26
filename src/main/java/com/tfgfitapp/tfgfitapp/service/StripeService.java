@@ -1,7 +1,9 @@
 package com.tfgfitapp.tfgfitapp.service;
 
 import com.stripe.model.Customer;
+import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.checkout.SessionCreateParams;
 import com.tfgfitapp.tfgfitapp.entity.Trainer;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
@@ -56,31 +58,26 @@ public class StripeService {
     @Transactional
     public String createTrainerCheckoutSession(User trainerUser, Trainer trainer) {
         try {
-            // 1. Crear Customer en Stripe si no tiene
-            String customerId = trainer.getStripeCustomerId();
-            if (customerId == null || customerId.isEmpty()) {
-                if (apiKey != null && !apiKey.contains("MOCK") && !apiKey.contains("*") && !apiKey.contains("AQUI")) {
-                    CustomerCreateParams customerParams = CustomerCreateParams.builder()
-                            .setEmail(trainerUser.getEmail())
-                            .setName(trainerUser.getName())
-                            .putMetadata("trainerId", trainer.getId().toString())
-                            .putMetadata("userId", trainerUser.getId().toString())
-                            .build();
-                    Customer customer = Customer.create(customerParams);
-                    customerId = customer.getId();
-                } else {
-                    // Para desarrollo/mock: Asignar un ID simulado
-                    customerId = "cus_mock_" + trainer.getId();
-                    log.info("Entorno local detectado. Omitiendo llamada real a Stripe API y asignando ID simulado: {}", customerId);
-                }
-                trainer.setStripeCustomerId(customerId);
-                trainer.setTrialEndsAt(LocalDateTime.now().plusDays(trialDays));
-                trainerRepository.save(trainer);
+            if (isStripeConfiguredForCheckout(trainerAnnualPriceId)) {
+                String customerId = ensureStripeCustomer(trainerUser, trainer);
+                SessionCreateParams params = SessionCreateParams.builder()
+                        .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                        .setCustomer(customerId)
+                        .addLineItem(SessionCreateParams.LineItem.builder()
+                                .setPrice(trainerAnnualPriceId)
+                                .setQuantity(1L)
+                                .build())
+                        .setSuccessUrl(buildAppUrl("/payment-success?flow=trainer"))
+                        .setCancelUrl(buildAppUrl("/payment-cancel?flow=trainer"))
+                        .build();
+
+                Session session = Session.create(params);
+                log.info("Checkout de Stripe creado para trainer {} -> {}", trainerUser.getEmail(), session.getId());
+                return session.getUrl();
+            } else {
+                log.info("Stripe no está completamente configurado. Usando Payment Link estático para trainer.");
+                return "https://buy.stripe.com/test_8x26oHczy18D7MM4ll5Ne00";
             }
-
-
-            log.info("Usando Stripe Payment Link estático para trainer: https://buy.stripe.com/test_8x26oHczy18D7MM4ll5Ne00");
-            return "https://buy.stripe.com/test_8x26oHczy18D7MM4ll5Ne00";
         } catch (Exception e) {
             log.error("Error al redirigir a Stripe: {}", e.getMessage());
             throw new RuntimeException("Error al procesar el pago. Inténtelo de nuevo.", e);
@@ -98,32 +95,74 @@ public class StripeService {
     @Transactional
     public String createClientPaymentSession(User trainerUser, Trainer trainer, Long clientId) {
         try {
-            String customerId = trainer.getStripeCustomerId();
-            if (customerId == null || customerId.isEmpty()) {
-                log.info("Creando Stripe Customer bajo demanda para trainer: {}", trainerUser.getEmail());
-                CustomerCreateParams customerParams = CustomerCreateParams.builder()
-                        .setEmail(trainerUser.getEmail())
-                        .setName(trainerUser.getName())
-                        .putMetadata("trainerId", trainer.getId().toString())
-                        .putMetadata("userId", trainerUser.getId().toString())
+            if (isStripeConfiguredForCheckout(clientMonthlyPriceId)) {
+                String customerId = ensureStripeCustomer(trainerUser, trainer);
+                SessionCreateParams params = SessionCreateParams.builder()
+                        .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                        .setCustomer(customerId)
+                        .addLineItem(SessionCreateParams.LineItem.builder()
+                                .setPrice(clientMonthlyPriceId)
+                                .setQuantity(1L)
+                                .build())
+                        .setSuccessUrl(buildAppUrl("/payment-success?flow=client&clientId=" + clientId))
+                        .setCancelUrl(buildAppUrl("/payment-cancel?flow=client&clientId=" + clientId))
                         .build();
-                Customer customer = Customer.create(customerParams);
-                customerId = customer.getId();
-                trainer.setStripeCustomerId(customerId);
-                trainerRepository.save(trainer);
+
+                Session session = Session.create(params);
+                log.info("Checkout de Stripe creado para cliente {} -> {}", clientId, session.getId());
+                return session.getUrl();
+            } else {
+                log.info("Stripe no está completamente configurado. Usando Payment Link estático para cliente.");
+                return "https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01";
             }
-
-            if (clientMonthlyPriceId == null || clientMonthlyPriceId.contains("PLACEHOLDER")) {
-                throw new IllegalStateException("El sistema de pagos no está configurado correctamente (Price ID faltante).");
-            }
-
-
-            log.info("Usando Stripe Payment Link estático para cliente: https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01");
-            return "https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01";
         } catch (Exception e) {
             log.error("Error al redirigir a Stripe: {}", e.getMessage());
             throw new RuntimeException("Error al procesar el pago del cliente.", e);
         }
+    }
+
+    /**
+     * Crea una sesión de Checkout para dar de alta un nuevo cliente tras el pago.
+     * Se usa desde el dashboard de clientes antes de guardar el perfil final.
+     */
+    @Transactional
+    public String createNewClientCheckoutSession(User trainerUser, Trainer trainer) {
+        try {
+            if (isStripeConfiguredForCheckout(clientMonthlyPriceId)) {
+                String customerId = ensureStripeCustomer(trainerUser, trainer);
+                SessionCreateParams params = SessionCreateParams.builder()
+                        .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                        .setCustomer(customerId)
+                        .addLineItem(SessionCreateParams.LineItem.builder()
+                                .setPrice(clientMonthlyPriceId)
+                                .setQuantity(1L)
+                                .build())
+                        .setSuccessUrl(buildAppUrl("/payment-success?flow=client"))
+                        .setCancelUrl(buildAppUrl("/payment-cancel?flow=client"))
+                        .build();
+
+                Session session = Session.create(params);
+                log.info("Checkout de Stripe creado para nuevo cliente -> {}", session.getId());
+                return session.getUrl();
+            } else {
+                log.info("Stripe no está completamente configurado. Usando Payment Link estático para nuevo cliente.");
+                return "https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01";
+            }
+        } catch (Exception e) {
+            log.error("Error al crear el checkout del nuevo cliente: {}", e.getMessage());
+            throw new RuntimeException("Error al procesar el pago del cliente.", e);
+        }
+    }
+
+    /**
+     * Devuelve el Payment Link estático de Stripe para la suscripción mensual de clientes.
+     * 
+     * Los clientes deben pagar esta suscripción para acceder a la app tras el alta.
+     * 
+     * @return URL del Payment Link de Stripe para clientes.
+     */
+    public String getClientSubscriptionPaymentLink() {
+        return "https://buy.stripe.com/test_8x24gz9nmdVpc321995Ne02";
     }
 
     /**
@@ -139,5 +178,40 @@ public class StripeService {
         }
         // Suscripción activa
         return Boolean.TRUE.equals(trainer.getSubscriptionActive());
+    }
+
+    private String ensureStripeCustomer(User trainerUser, Trainer trainer) throws Exception {
+        String customerId = trainer.getStripeCustomerId();
+        if (customerId != null && !customerId.isBlank()) {
+            return customerId;
+        }
+
+        CustomerCreateParams customerParams = CustomerCreateParams.builder()
+                .setEmail(trainerUser.getEmail())
+                .setName(trainerUser.getName())
+                .putMetadata("trainerId", trainer.getId().toString())
+                .putMetadata("userId", trainerUser.getId().toString())
+                .build();
+        Customer customer = Customer.create(customerParams);
+        customerId = customer.getId();
+        trainer.setStripeCustomerId(customerId);
+        trainer.setTrialEndsAt(LocalDateTime.now().plusDays(trialDays));
+        trainerRepository.save(trainer);
+        return customerId;
+    }
+
+    private boolean isStripeConfiguredForCheckout(String priceId) {
+        return apiKey != null && !apiKey.isBlank()
+                && !apiKey.contains("MOCK")
+                && !apiKey.contains("AQUI")
+                && !apiKey.contains("*")
+                && priceId != null && !priceId.isBlank()
+                && !priceId.contains("MOCK")
+                && !priceId.contains("PLACEHOLDER");
+    }
+
+    private String buildAppUrl(String path) {
+        String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        return normalizedBaseUrl + path;
     }
 }

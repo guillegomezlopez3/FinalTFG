@@ -15,7 +15,8 @@ class AuthService {
 
   /// Realiza el inicio de sesión con [email] y [password].
   /// 
-  /// Devuelve un mapa con el estado de la operación y los datos del usuario si tiene éxito.
+  /// Devuelve un mapa con el estado de la operación, los datos del usuario si tiene éxito,
+  /// y opcionalmente [requiresPayment] + [checkoutUrl] si el cliente debe pagar su suscripción.
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await ApiClient.post(
@@ -32,7 +33,17 @@ class AuthService {
 
         if (accessToken.isNotEmpty) {
           await TokenUtils.saveTokens(accessToken, refreshToken: refreshToken);
-          return {'success': true, 'data': data};
+
+          // Si el servidor indica que el cliente debe pagar la suscripción
+          final bool requiresPayment = data['requiresPayment'] == true;
+          final String? checkoutUrl = data['checkoutUrl'] as String?;
+
+          return {
+            'success': true,
+            'data': data,
+            'requiresPayment': requiresPayment,
+            'checkoutUrl': checkoutUrl,
+          };
         }
       }
 

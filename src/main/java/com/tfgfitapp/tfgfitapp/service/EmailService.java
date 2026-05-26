@@ -7,6 +7,7 @@ import com.tfgfitapp.tfgfitapp.repository.EmailConfirmationTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -125,18 +126,37 @@ public class EmailService {
 
     // ===== HELPERS =====
 
+    /**
+     * Envía un email HTML con reintentos automáticos (hasta 2 intentos extra) para
+     * tolerar fallos de conexión transitorios en entornos cloud.
+     */
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            mailSender.send(message);
-            log.info("Email enviado a: {}", to);
-        } catch (MessagingException e) {
-            log.error("Error al enviar email a {}: {}", to, e.getMessage());
+        int maxAttempts = 3;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail, "TFGFitApp");
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
+                mailSender.send(message);
+                log.info("✅ Email enviado correctamente a: {} (intento {})", to, attempt);
+                return;
+            } catch (MailException e) {
+                log.warn("⚠️ Error al enviar email a {} (intento {}/{}): {}", to, attempt, maxAttempts, e.getMessage());
+                if (attempt == maxAttempts) {
+                    log.error("❌ No se pudo enviar el email a {} tras {} intentos. "
+                            + "Verifica que: 1) App Password de Gmail es correcto, "
+                            + "2) spring.mail.properties.mail.smtp.starttls.required=true está configurado, "
+                            + "3) el servidor tiene salida al puerto 587.", to, maxAttempts);
+                } else {
+                    try { Thread.sleep(2000L * attempt); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+                }
+            } catch (Exception e) {
+                log.error("❌ Error inesperado al enviar email a {}: {}", to, e.getMessage());
+                return;
+            }
         }
     }
 

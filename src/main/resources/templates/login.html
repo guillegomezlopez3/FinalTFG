@@ -80,6 +80,9 @@
         if (urlParams.get('payment_completed') === 'true') {
             showAlert(alertBox, '¡Pago completado con éxito! Por favor, revisa tu correo electrónico para activar tu cuenta antes de iniciar sesión.', 'success');
         }
+        if (urlParams.get('client_subscription') === 'true') {
+            showAlert(alertBox, '🎉 ¡Suscripción activada! Ya puedes iniciar sesión y acceder a tu plan de entrenamiento.', 'success');
+        }
     });
 
     function togglePass() {
@@ -115,7 +118,29 @@
         alertBox.innerHTML = '';
 
         try {
-            const user = await login(email, password);
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || err.message || 'Credenciales incorrectas');
+            }
+
+            const data = await res.json();
+            saveToken(data.token);
+            saveUser({ id: data.userId, name: data.name, email: data.email, role: data.role });
+
+            // Si el cliente necesita pagar la suscripción mensual → redirigir a Stripe
+            if (data.requiresPayment && data.checkoutUrl) {
+                // Guardar email para activar la suscripción al volver de Stripe
+                localStorage.setItem('pending_client_email', data.email);
+                window.location.href = data.checkoutUrl;
+                return;
+            }
+
             window.location.href = '/dashboard';
         } catch (err) {
             showAlert(alertBox, err.message || 'Error al iniciar sesión.');

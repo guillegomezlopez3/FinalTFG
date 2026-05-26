@@ -57,7 +57,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // ── Endpoints públicos de la API ──────────────────────────
-                .requestMatchers("/api/auth/**", "/api/stripe/webhook").permitAll()
+                .requestMatchers("/api/auth/**", "/api/stripe/webhook",
+                                 "/api/stripe/activate-trainer-public",
+                                 "/api/stripe/activate-client-public").permitAll()
                 // ── Páginas web públicas (Thymeleaf) ─────────────────────
                 .requestMatchers("/", "/login", "/register", "/confirm-email", "/payment-success", "/payment-cancel").permitAll()
                 // ── Panel privado Thymeleaf: la autenticación se gestiona

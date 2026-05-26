@@ -3,9 +3,11 @@ package com.tfgfitapp.tfgfitapp.service;
 import com.tfgfitapp.tfgfitapp.dto.AuthResponse;
 import com.tfgfitapp.tfgfitapp.dto.LoginRequest;
 import com.tfgfitapp.tfgfitapp.dto.RegisterRequest;
+import com.tfgfitapp.tfgfitapp.entity.Client;
 import com.tfgfitapp.tfgfitapp.entity.Trainer;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.enumeration.Role;
+import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
 import com.tfgfitapp.tfgfitapp.security.JwtService;
@@ -32,11 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     public AuthService(UserRepository userRepository, TrainerRepository trainerRepository,
+                       ClientRepository clientRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService, AuthenticationManager authenticationManager,
                        StripeService stripeService, EmailService emailService) {
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
+        this.clientRepository = clientRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -46,6 +50,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
+    private final ClientRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -140,6 +145,16 @@ public class AuthService {
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setRole(user.getRole());
+
+        // Verificar suscripción mensual para clientes
+        if (user.getRole() == Role.CLIENT) {
+            Client client = clientRepository.findByUserId(user.getId()).orElse(null);
+            if (client == null || !Boolean.TRUE.equals(client.getSubscriptionActive())) {
+                response.setRequiresPayment(true);
+                response.setCheckoutUrl(stripeService.getClientSubscriptionPaymentLink());
+            }
+        }
+
         return response;
     }
 }

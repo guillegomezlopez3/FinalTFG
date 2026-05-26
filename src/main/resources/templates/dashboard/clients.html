@@ -409,9 +409,18 @@ async function createClient() {
 
         // Guardar datos temporalmente para crear el cliente tras el pago
         sessionStorage.setItem('pending_client', JSON.stringify(body));
-        
-        // Redirigir directamente al Payment Link de Stripe
-        window.location.href = "https://buy.stripe.com/test_28E8wP6ba4kP5EE4ll5Ne01";
+
+        // Obtener una sesión de Checkout de Stripe con retorno a la app
+        const res = await apiFetch('/stripe/checkout/client-new', {
+            method: 'POST'
+        });
+        const data = await res.json();
+
+        if (!data.checkoutUrl) {
+            throw new Error('No se pudo iniciar el pago');
+        }
+
+        window.location.href = data.checkoutUrl;
     } catch(e) {
         showAlert(document.getElementById('new-client-alert'), 'Error al iniciar el proceso de pago');
         const btn = document.querySelector('button[onclick="createClient()"]');

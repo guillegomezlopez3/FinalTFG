@@ -8,33 +8,98 @@
     <div class="card shadow-lg border-0" style="max-width: 500px; width: 100%; border-radius: 1rem;">
         <div class="card-body p-5 text-center fade-in-up">
             <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #10b981;"></i>
-            <h2 class="mt-4 mb-3">¡Suscripción activada!</h2>
-            <p class="text-muted mb-4">El proceso de pago se ha completado correctamente. Para comenzar a usar la plataforma, activa tu cuenta con el enlace enviado a tu correo electrónico.</p>
-            <a href="/login" class="btn btn-primary px-4 py-2" style="background: var(--orange); border: none; font-weight: 600;">Ir al Inicio de Sesión</a>
+            <h2 id="payment-title" class="mt-4 mb-3">¡Suscripción activada!</h2>
+            <p id="payment-text" class="text-muted mb-4">El proceso de pago se ha completado correctamente. Para comenzar a usar la plataforma, activa tu cuenta con el enlace enviado a tu correo electrónico.</p>
+            <a id="payment-btn" href="/login" class="btn btn-primary px-4 py-2" style="background: var(--orange); border: none; font-weight: 600;">Ir al Inicio de Sesión</a>
         </div>
     </div>
 </div>
 <script th:src="@{/js/app.js}"></script>
 <script>
-    const user = getUser();
-    if (user && user.email) {
-        fetch('/api/stripe/activate-trainer-public', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: user.email })
-        })
-        .then(res => {
-            if (res.ok) console.log('Suscripción activada localmente y correo enviado');
-        })
-        .catch(err => console.error('Error activando suscripción:', err));
+    const params = new URLSearchParams(window.location.search);
+    const flow = (params.get('flow') || 'trainer').toLowerCase();
+
+    const titleEl = document.getElementById('payment-title');
+    const textEl = document.getElementById('payment-text');
+    const btnEl = document.getElementById('payment-btn');
+
+    const redirectLater = (url, delay = 5000) => setTimeout(() => { window.location.href = url; }, delay);
+
+    if (flow === 'client-subscription') {
+        titleEl.textContent = '¡Suscripción activada!';
+        textEl.textContent = 'Tu pago mensual se ha completado correctamente. Estamos activando tu acceso a la plataforma...';
+        btnEl.textContent = 'Ir al Inicio de Sesión';
+        btnEl.href = '/login';
+
+        // Recuperar el email guardado antes de ir a Stripe
+        const clientEmail = localStorage.getItem('pending_client_email') || (getUser() && getUser().email);
+        if (clientEmail) {
+            fetch('/api/stripe/activate-client-public', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: clientEmail })
+            })
+            .then(res => {
+                if (res.ok) {
+                    localStorage.removeItem('pending_client_email');
+                    textEl.textContent = '¡Tu suscripción mensual ha sido activada con éxito! Ya puedes iniciar sesión en la aplicación.';
+                    console.log('Suscripción de cliente activada correctamente');
+                }
+            })
+            .catch(err => console.error('Error activando suscripción de cliente:', err));
+        }
+        clearSession();
+        redirectLater('/login?client_subscription=true');
+
+    } else if (flow === 'client') {
+        titleEl.textContent = '¡Pago completado!';
+        textEl.textContent = 'El pago se ha completado correctamente. Estamos registrando el nuevo cliente y volverás al panel de clientes en unos segundos.';
+        btnEl.textContent = 'Ir al Dashboard de Clientes';
+        btnEl.href = '/dashboard/clients';
+
+        const pendingData = sessionStorage.getItem('pending_client');
+        if (!pendingData) {
+            redirectLater('/dashboard/clients', 3000);
+        } else {
+            try {
+                const body = JSON.parse(pendingData);
+                apiFetch('/clients', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                }).then(res => {
+                    if (!res.ok) throw new Error('No se pudo crear el cliente tras el pago');
+                    sessionStorage.removeItem('pending_client');
+                    successToast('¡Pago completado y cliente creado correctamente!');
+                    redirectLater('/dashboard/clients?payment=success', 3000);
+                }).catch(err => {
+                    console.error('Error finalizando la creación del cliente:', err);
+                    textEl.textContent = 'El pago se ha completado, pero hubo un problema al registrar el cliente. Por favor, vuelve al panel y revisa los datos.';
+                    btnEl.textContent = 'Volver al Dashboard de Clientes';
+                    btnEl.href = '/dashboard/clients';
+                    redirectLater('/dashboard/clients', 5000);
+                });
+            } catch (err) {
+                console.error('Error leyendo el cliente pendiente:', err);
+                redirectLater('/dashboard/clients', 3000);
+            }
+        }
+    } else {
+        const user = getUser();
+        if (user && user.email) {
+            fetch('/api/stripe/activate-trainer-public', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email })
+            })
+            .then(res => {
+                if (res.ok) console.log('Suscripción activada localmente y correo enviado');
+            })
+            .catch(err => console.error('Error activando suscripción:', err));
+        }
+
+        clearSession();
+        redirectLater('/login?payment_completed=true');
     }
-
-    // Limpiar sesión local ya que no puede acceder hasta confirmar correo
-    clearSession();
-
-    setTimeout(() => {
-        window.location.href = '/login?payment_completed=true';
-    }, 5000);
 </script>
 </body>
 </html>

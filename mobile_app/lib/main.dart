@@ -7,6 +7,7 @@ import 'providers/workout_provider.dart';
 import 'providers/chat_provider.dart';
 import 'providers/progress_provider.dart';
 import 'ui/screens/auth/login_screen.dart';
+import 'ui/screens/auth/subscription_screen.dart';
 import 'ui/screens/main_scaffold.dart';
 import 'utils/theme.dart';
 
@@ -48,7 +49,8 @@ class FitAppMobile extends StatelessWidget {
 
 /// Widget que decide qué pantalla mostrar según el estado de autenticación.
 /// 
-/// Muestra la pantalla de carga, el panel principal o el inicio de sesión.
+/// Muestra la pantalla de carga, el paywall de suscripción, el panel principal
+/// o el inicio de sesión según el estado del [AuthProvider].
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -62,6 +64,11 @@ class AuthWrapper extends StatelessWidget {
           child: CircularProgressIndicator(),
         ),
       );
+    }
+
+    // Cliente sin suscripción activa → mostrar paywall
+    if (authProvider.status == AuthStatus.requiresPayment) {
+      return const SubscriptionScreen();
     }
 
     if (authProvider.status == AuthStatus.authenticated) {

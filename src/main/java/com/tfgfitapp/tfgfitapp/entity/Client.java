@@ -83,6 +83,14 @@ public class Client {
     @Column(nullable = false)
     private Boolean active = true;
 
+    /** Indica si el cliente tiene una suscripción mensual activa (pago al entrenador). */
+    @Column(name = "subscription_active", nullable = false)
+    private Boolean subscriptionActive = false;
+
+    /** ID del cliente en Stripe (para futuras integraciones con Checkout dinámico). */
+    @Column(name = "stripe_customer_id", length = 100)
+    private String stripeCustomerId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -157,6 +165,14 @@ public class Client {
     public Boolean getActive() { return active; }
     /** @param active El nuevo estado. */
     public void setActive(Boolean active) { this.active = active; }
+    /** @return true si la suscripción mensual está activa. */
+    public Boolean getSubscriptionActive() { return subscriptionActive; }
+    /** @param subscriptionActive El nuevo estado de suscripción. */
+    public void setSubscriptionActive(Boolean subscriptionActive) { this.subscriptionActive = subscriptionActive; }
+    /** @return ID del cliente en Stripe. */
+    public String getStripeCustomerId() { return stripeCustomerId; }
+    /** @param stripeCustomerId El ID de Stripe. */
+    public void setStripeCustomerId(String stripeCustomerId) { this.stripeCustomerId = stripeCustomerId; }
     /** @return Fecha de creación del registro. */
     public LocalDateTime getCreatedAt() { return createdAt; }
 

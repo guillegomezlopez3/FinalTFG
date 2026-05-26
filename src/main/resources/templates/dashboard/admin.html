@@ -56,6 +56,43 @@
             </div>
         </div>
     </div>
+
+    <!-- DIAGNÓSTICO DE EMAIL -->
+    <div class="row g-3 mt-2">
+        <div class="col-lg-6 fade-in-up delay-3">
+            <div class="card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-envelope-check-fill me-2" style="color:#FF7A00"></i>Diagnóstico de Email</h5>
+                    <span class="badge" id="email-status-badge" style="background:var(--surface-2);color:var(--text-muted);font-size:.75rem;">Verificando...</span>
+                </div>
+                <div style="padding:1.25rem;">
+                    <div id="email-config-info" class="mb-3" style="font-size:.82rem;color:var(--text-muted);"></div>
+                    <div class="mb-3">
+                        <label class="form-label" style="font-size:.85rem;font-weight:600;">Enviar email de prueba a:</label>
+                        <div class="d-flex gap-2">
+                            <input type="email" id="test-email-input" class="form-control" placeholder="tu@email.com" style="font-size:.85rem;"/>
+                            <button class="btn btn-sm" id="btn-test-email" onclick="sendTestEmail()"
+                                style="background:var(--orange);color:#fff;font-weight:600;white-space:nowrap;padding:.4rem 1rem;">
+                                <i class="bi bi-send-fill me-1"></i>Probar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="email-test-result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 fade-in-up delay-4">
+            <div class="card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-info-circle-fill me-2" style="color:#3b82f6"></i>Configuración SMTP</h5>
+                </div>
+                <div style="padding:1.25rem;" id="smtp-config-card">
+                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
@@ -198,6 +235,85 @@ async function toggleActive(userId, btn, currentState) {
         alert(`No se pudo ${actionText} el usuario.`);
     }
 }
+
+// --- DIAGNÓSTICO DE EMAIL ---
+async function loadEmailConfig() {
+    try {
+        const res = await apiFetch('/admin/email/config');
+        if(!res.ok) return;
+        const data = await res.json();
+        
+        const badge = document.getElementById('email-status-badge');
+        badge.textContent = data.emailEnabled ? 'Activo' : 'Desactivado';
+        badge.style.background = data.emailEnabled ? '#dcfce7' : '#fee2e2';
+        badge.style.color = data.emailEnabled ? '#166534' : '#991b1b';
+
+        document.getElementById('email-config-info').innerHTML = 
+            `Enviando como: <strong>${data.config.from}</strong> a través de <strong>${data.config.host}:${data.config.port}</strong>`;
+
+        document.getElementById('smtp-config-card').innerHTML = `
+            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                <span class="text-muted" style="font-size:.85rem;">Servidor SMTP</span>
+                <span style="font-size:.85rem;font-weight:600;">${data.config.host}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                <span class="text-muted" style="font-size:.85rem;">Puerto</span>
+                <span style="font-size:.85rem;font-weight:600;">${data.config.port}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                <span class="text-muted" style="font-size:.85rem;">Remitente</span>
+                <span style="font-size:.85rem;font-weight:600;">${data.config.from}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span class="text-muted" style="font-size:.85rem;">URL Base (Enlaces)</span>
+                <span style="font-size:.85rem;font-weight:600;color:var(--primary);">${data.config.baseUrl}</span>
+            </div>
+        `;
+    } catch(e) {
+        document.getElementById('smtp-config-card').innerHTML = `<div class="text-danger" style="font-size:.85rem;">Error cargando configuración</div>`;
+    }
+}
+
+async function sendTestEmail() {
+    const email = document.getElementById('test-email-input').value;
+    if(!email) { alert('Introduce un email'); return; }
+    
+    const btn = document.getElementById('btn-test-email');
+    const resDiv = document.getElementById('email-test-result');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    resDiv.innerHTML = '';
+
+    try {
+        const res = await apiFetch('/admin/email/test', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            resDiv.innerHTML = `<div class="alert alert-success mt-3" style="padding:.75rem;font-size:.85rem;margin-bottom:0;"><i class="bi bi-check-circle-fill me-2"></i>${data.message} (${data.elapsedMs}ms)</div>`;
+        } else {
+            let troubleHtml = '';
+            if(data.troubleshooting) {
+                troubleHtml = '<ul class="mt-2 mb-0 ps-3 text-start" style="font-size:.8rem;">' + 
+                    Object.values(data.troubleshooting).map(t => `<li>${t}</li>`).join('') + '</ul>';
+            }
+            resDiv.innerHTML = `<div class="alert alert-danger mt-3" style="padding:.75rem;font-size:.85rem;margin-bottom:0;"><i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Error:</strong> ${data.message}${troubleHtml}</div>`;
+        }
+    } catch(e) {
+        resDiv.innerHTML = `<div class="alert alert-danger mt-3" style="padding:.75rem;font-size:.85rem;margin-bottom:0;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Error de conexión</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Probar';
+    }
+}
+
+// Hook into DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    loadEmailConfig();
+});
 </script>
 </body>
 </html>

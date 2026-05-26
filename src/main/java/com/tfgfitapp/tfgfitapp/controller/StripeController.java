@@ -9,6 +9,7 @@ import com.stripe.net.Webhook;
 import com.tfgfitapp.tfgfitapp.entity.Trainer;
 import com.tfgfitapp.tfgfitapp.entity.User;
 import com.tfgfitapp.tfgfitapp.exception.ResourceNotFoundException;
+import com.tfgfitapp.tfgfitapp.repository.ClientRepository;
 import com.tfgfitapp.tfgfitapp.repository.TrainerRepository;
 import com.tfgfitapp.tfgfitapp.repository.UserRepository;
 import com.tfgfitapp.tfgfitapp.service.StripeService;
@@ -40,16 +41,19 @@ public class StripeController {
     private final StripeService stripeService;
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
+    private final ClientRepository clientRepository;
     private final EmailService emailService;
 
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
 
     public StripeController(StripeService stripeService, TrainerRepository trainerRepository, 
-                            UserRepository userRepository, EmailService emailService) {
+                            UserRepository userRepository, ClientRepository clientRepository,
+                            EmailService emailService) {
         this.stripeService = stripeService;
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
+        this.clientRepository = clientRepository;
         this.emailService = emailService;
     }
 
@@ -86,6 +90,19 @@ public class StripeController {
         return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
     }
 
+    /**
+     * Crea una sesión de checkout para el alta de un nuevo cliente desde el dashboard.
+     * Tras el pago, Stripe vuelve a la pantalla de clientes para finalizar el alta.
+     */
+    @PostMapping("/checkout/client-new")
+    @PreAuthorize("hasRole('TRAINER')")
+    public ResponseEntity<Map<String, String>> createNewClientCheckout(@AuthenticationPrincipal User currentUser) {
+        Trainer trainer = trainerRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil de entrenador no encontrado"));
+        String checkoutUrl = stripeService.createNewClientCheckoutSession(currentUser, trainer);
+        return ResponseEntity.ok(Map.of("checkoutUrl", checkoutUrl));
+    }
+
     @PostMapping("/activate-trainer")
     @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<Map<String, String>> activateTrainer(@AuthenticationPrincipal User currentUser) {
@@ -117,6 +134,32 @@ public class StripeController {
 
         log.info("Entrenador activado mediante pasarela y email de activación enviado a: {}", email);
         return ResponseEntity.ok(Map.of("message", "Suscripción activada con éxito y correo de confirmación enviado"));
+    }
+
+    /**
+     * Activa la suscripción mensual de un cliente tras completar el pago en Stripe.
+     * Endpoint público: Stripe redirige al cliente a esta URL sin autenticación JWT.
+     *
+     * @param payload Map con el email del cliente.
+     * @return Mensaje de éxito o error.
+     */
+    @PostMapping("/activate-client-public")
+    public ResponseEntity<Map<String, String>> activateClientPublic(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "El email es requerido"));
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        clientRepository.findByUserId(user.getId()).ifPresent(client -> {
+            client.setSubscriptionActive(true);
+            clientRepository.save(client);
+            log.info("Suscripción de cliente activada para email: {}", email);
+        });
+
+        return ResponseEntity.ok(Map.of("message", "Suscripción de cliente activada con éxito"));
     }
 
     /**
