@@ -33,7 +33,7 @@ public class EmailDiagnosticController {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:noreply@tfgfitapp.com}")
+    @Value("${app.email.sender:${spring.mail.username}}")
     private String fromEmail;
 
     @Value("${app.email.enabled:false}")

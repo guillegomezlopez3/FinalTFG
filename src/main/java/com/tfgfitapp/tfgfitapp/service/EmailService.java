@@ -40,7 +40,7 @@ public class EmailService {
     @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
 
-    @Value("${spring.mail.username:noreply@tfgfitapp.com}")
+    @Value("${app.email.sender:${spring.mail.username}}")
     private String fromEmail;
 
     public EmailService(EmailConfirmationTokenRepository tokenRepository,
